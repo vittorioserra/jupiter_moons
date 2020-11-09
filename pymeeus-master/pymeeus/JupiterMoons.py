@@ -32,7 +32,8 @@ class JupiterMoons(object):
         2: Europa
         3: Ganymed
         4: Callisto
-    The algorithm used can be found in chapter 44 (high accuracy) of Meeus' book Astronomic Algorithms
+    The algorithm used can be found in chapter 44 (high accuracy method) of Meeus'
+    book Astronomic Algorithms
     """
 
     @staticmethod
@@ -68,6 +69,7 @@ class JupiterMoons(object):
         y = 0.0
         z = 0.0
         tau = 0.0
+
         while DELTA != DELTA_old:
             # Calculate light-time delay
             tau = 0.0057755183 * DELTA
@@ -560,8 +562,8 @@ class JupiterMoons(object):
         :param epoch: Epoch the distance should be calculated for.
         :type epoch: :py:class:`Epoch`
 
-        :returns: Distance Earth-Jupiter in AU
-        :rtype: float
+        :returns: Distance Earth-Jupiter in AU and light-time delay from Earth-Jupiter
+        :rtype: tuple
 
         :raises: TypeError if input values are wrong type
         """
@@ -589,7 +591,7 @@ class JupiterMoons(object):
             DELTA_old = DELTA
             DELTA = sqrt(x ** 2 + y ** 2 + z ** 2)
 
-        return DELTA
+        return DELTA, tau
 
     @staticmethod
     def correct_rectangular_positions(R, i_sat, DELTA, X_coordinate, Y_coordinate=0, Z_coordinate=0):
@@ -647,6 +649,59 @@ class JupiterMoons(object):
         return X, Y, Z
 
     @staticmethod
+    def check_phenomena(epoch):
+        """This method checks if the given coordinates correspond with any satellite
+        phenomena. It returns the type of phenomena for all satellites.
+
+        :param epoch: Epoch the calculations should be made for
+        :type epoch: :py:class:'Epoch'
+
+        :returns: Whether the satellite is ecclipsed, occulted in penumbra
+        :rtype: tuple
+
+        :raises: TypeError if input values are wrong type
+        """
+
+        # Check input type
+        if not isinstance(epoch, Epoch):
+            raise TypeError("Invalid input type")
+
+        # Calculate light-time delay
+        DELTA, tau = JupiterMoons.calculate_DELTA(epoch)
+
+        # Calculate coordinates as seen from the Earth
+        Coords_Earth = JupiterMoons.rectangular_positions(epoch)
+        # Calculate coordinates as seen from the Sun
+        # delay by tau because of later observations from the Earth
+        Coords_Sun = JupiterMoons.rectangular_positions(epoch - tau, solar=True)
+
+        # Result matrix, where each rows is for a satellite
+        # Column 0: Occultation
+        # Column 1: Eclipse
+        # TODO Column 2: Penumbra
+        result_matrix = [[False, False, False],
+                         [False, False, False],
+                         [False, False, False],
+                         [False, False, False]]
+
+        for i in range(1, 4):
+            # Coordinates for the iterated satellite
+            X = Coords_Earth[i][0]
+            Y = Coords_Earth[i][1]
+            Z = Coords_Earth[i][2]
+
+            X_0 = Coords_Sun[i][0]
+            Y_0 = Coords_Sun[i][1]
+            Z_0 = Coords_Sun[i][2]
+
+            # Check occultation
+            result_matrix[i][0] = JupiterMoons.check_occulation(X, Y, Z)
+            # Check eclipse
+            result_matrix[i][1] = JupiterMoons.check_eclipse(X_0, Y_0, Z_0)
+
+        return result_matrix
+
+    @staticmethod
     def check_coordinates(X, Y):
         """This method checks if the given coordinates correspond with a satellite
         phenomena. It returns if the satellite with the given coordinates is hidden
@@ -668,7 +723,7 @@ class JupiterMoons(object):
         return X ** 2 + Y ** 2 <= 1
 
     @staticmethod
-    def check_occulation(X=0, Y=0, Z=0, epoch=None):
+    def check_occulation(X=0, Y=0, Z=0, epoch=None, i_sat=None):
         """This method checks if the given coordinates or Epoch correspond with a
         satellite being in occultation.
 
@@ -680,15 +735,20 @@ class JupiterMoons(object):
         :type Z: float
         :param epoch: Epoch that should be checked
         :type epoch: :py:class:`Epoch`
+        :param i_sat: Index of the satellite (only for given Epoch)
+        :type i_sat: int
 
         :returns: Whether the satellite is in occultation
         :rtype: bool
         :raises: TypeError if input values are wrong type
         """
 
-        if epoch is not None:
-            if isinstance(epoch, Epoch):
-                X, Y, Z = JupiterMoons.rectangular_positions(epoch)
+        # Check if Epoch is given
+        if epoch is not None and i_sat is not None:
+            # Check types
+            if isinstance(epoch, Epoch) and isinstance(i_sat, int):
+                # Calculate coordinates for given Epoch as seen from the Earth
+                X, Y, Z = JupiterMoons.rectangular_positions(epoch)[i_sat - 1]
             else:
                 raise TypeError("Invalid input types")
 
@@ -697,7 +757,7 @@ class JupiterMoons(object):
         return Z > 0 and JupiterMoons.check_coordinates(X, Y)
 
     @staticmethod
-    def check_eclipse(X_0=0, Y_0=0, Z_0=0, epoch=None):
+    def check_eclipse(X_0=0, Y_0=0, Z_0=0, epoch=None, i_sat=None):
         """This method checks if the given coordinates or Epoch correspond with a
         satellite being in eclipse.
 
@@ -709,6 +769,8 @@ class JupiterMoons(object):
         :type Z_0: float
         :param epoch: Epoch that should be checked
         :type epoch: :py:class:`Epoch`
+        :param i_sat: Index of the satellite (only for given Epoch)
+        :type i_sat: int
 
         :returns: Whether the satellite is in eclipse. Be aware that the events will later be seen
             from the Earth (by the light-time tau)
@@ -716,9 +778,12 @@ class JupiterMoons(object):
         :raises: TypeError if input values are wrong type
         """
 
-        if epoch is not None:
-            if isinstance(epoch, Epoch):
-                X_0, Y_0, Z_0 = JupiterMoons.rectangular_positions(epoch, solar=True)
+        # Check if Epoch is given
+        if epoch is not None and i_sat is not None:
+            # Check types
+            if isinstance(epoch, Epoch) and isinstance(i_sat, int):
+                # Calculate coordinates for given Epoch as seen from the Sun
+                X_0, Y_0, Z_0 = JupiterMoons.rectangular_positions(epoch, solar=True)[i_sat - 1]
             else:
                 raise TypeError("Invalid input types")
 
@@ -728,7 +793,6 @@ class JupiterMoons(object):
 
 
 def main():
-
     # Let's define a small helper function
     def print_me(msg, val):
         print("{}: {}".format(msg, val))
@@ -742,5 +806,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()
