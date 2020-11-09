@@ -672,8 +672,8 @@ class JupiterMoons(object):
         # Calculate coordinates as seen from the Earth
         Coords_Earth = JupiterMoons.rectangular_positions(epoch)
         # Calculate coordinates as seen from the Sun
-        # delay by tau because of later observations from the Earth
-        Coords_Sun = JupiterMoons.rectangular_positions(epoch - tau, solar=True)
+        # TODO: tbd: delay by tau because of later observations from the Earth
+        Coords_Sun = JupiterMoons.rectangular_positions(epoch, solar=True)
 
         # Result matrix, where each rows is for a satellite
         # Column 0: Occultation
