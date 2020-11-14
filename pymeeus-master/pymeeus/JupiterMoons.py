@@ -650,13 +650,13 @@ class JupiterMoons(object):
 
     @staticmethod
     def check_phenomena(epoch):
-        """This method checks if the given coordinates correspond with any satellite
-        phenomena. It returns the type of phenomena for all satellites.
+        """This method returns the perspective distance to any phenomena of all
+        satellites for the given epoch.
 
         :param epoch: Epoch the calculations should be made for
         :type epoch: :py:class:'Epoch'
 
-        :returns: Whether the satellite is ecclipsed, occulted in penumbra
+        :returns: Distance to the satellite being ecclipsed, occulted in penumbra
         :rtype: tuple
 
         :raises: TypeError if input values are wrong type
@@ -667,7 +667,7 @@ class JupiterMoons(object):
             raise TypeError("Invalid input type")
 
         # Calculate light-time delay
-        DELTA, tau = JupiterMoons.calculate_DELTA(epoch)
+        # DELTA, tau = JupiterMoons.calculate_DELTA(epoch)
 
         # Calculate coordinates as seen from the Earth
         Coords_Earth = JupiterMoons.rectangular_positions(epoch)
@@ -679,12 +679,12 @@ class JupiterMoons(object):
         # Column 0: Occultation
         # Column 1: Eclipse
         # TODO Column 2: Penumbra
-        result_matrix = [[False, False, False],
-                         [False, False, False],
-                         [False, False, False],
-                         [False, False, False]]
+        result_matrix = [[0.0, 0.0, 0.0],
+                         [0.0, 0.0, 0.0],
+                         [0.0, 0.0, 0.0],
+                         [0.0, 0.0, 0.0]]
 
-        for i in range(1, 4):
+        for i in range(len(result_matrix)):
             # Coordinates for the iterated satellite
             X = Coords_Earth[i][0]
             Y = Coords_Earth[i][1]
@@ -702,6 +702,34 @@ class JupiterMoons(object):
         return result_matrix
 
     @staticmethod
+    def is_phenomena(epoch):
+        """This method checks if the given coordinates correspond with any satellite
+        phenomena. It returns the type of phenomena for all satellites.
+
+        :param epoch: Epoch the calculations should be made for
+        :type epoch: :py:class:'Epoch'
+
+        :returns: Distance to the satellite being ecclipsed, occulted in penumbra
+        :rtype: tuple
+
+        :raises: TypeError if input values are wrong type
+        """
+
+        # Get distance Matrix
+        dist_matrix = JupiterMoons.check_phenomena(epoch)
+
+        result_matrix = [[False, False, False],
+                         [False, False, False],
+                         [False, False, False],
+                         [False, False, False]]
+
+        for row in range(len(result_matrix)):
+            for col in range(len(result_matrix[row])):
+                result_matrix[row][col] = (1 >= dist_matrix[row][col] >= 0)
+
+        return result_matrix
+
+    @staticmethod
     def check_coordinates(X, Y):
         """This method checks if the given coordinates correspond with a satellite
         phenomena. It returns if the satellite with the given coordinates is hidden
@@ -712,15 +740,14 @@ class JupiterMoons(object):
         :param Y: Y-coordinate of the satellite in Jupiter's radii
         :type Y: float
 
-        :returns: Whether the satellite's coordinates are hidden by or in front of
-            Jupiter or not
-        :rtype: bool
+        :returns: Perspective distance to Jupiter's center in Jupiter's radii
+        :rtype: float
         """
 
         # Accounting for elliptical Jupiter disk
         Y *= 1.071374
 
-        return X ** 2 + Y ** 2 <= 1
+        return sqrt(X ** 2 + Y ** 2)
 
     @staticmethod
     def check_occulation(X=0, Y=0, Z=0, epoch=None, i_sat=None):
@@ -738,8 +765,9 @@ class JupiterMoons(object):
         :param i_sat: Index of the satellite (only for given Epoch)
         :type i_sat: int
 
-        :returns: Whether the satellite is in occultation
-        :rtype: bool
+        :returns: Distance to center of Jupiter (negative if in front,
+            positive if behind)
+        :rtype: float
         :raises: TypeError if input values are wrong type
         """
 
@@ -752,9 +780,11 @@ class JupiterMoons(object):
             else:
                 raise TypeError("Invalid input types")
 
-        # Check if satellite is more distant than Jupiter and coordinates are
-        # behind Jupiter
-        return Z > 0 and JupiterMoons.check_coordinates(X, Y)
+        # Check if satellite is more distant than Jupiter and distance to center
+        if Z > 0:
+            return JupiterMoons.check_coordinates(X, Y)
+        else:
+            return -1 * JupiterMoons.check_coordinates(X, Y)
 
     @staticmethod
     def check_eclipse(X_0=0, Y_0=0, Z_0=0, epoch=None, i_sat=None):
@@ -787,9 +817,11 @@ class JupiterMoons(object):
             else:
                 raise TypeError("Invalid input types")
 
-        # Check if satellite is more distant than Jupiter and coordinates are
-        # behind Jupiter
-        return Z_0 > 0 and JupiterMoons.check_coordinates(X_0, Y_0)
+        # Check if satellite is more distant than Jupiter and distance to center
+        if Z_0 > 0:
+            return JupiterMoons.check_coordinates(X_0, Y_0)
+        else:
+            return -1 * JupiterMoons.check_coordinates(X_0, Y_0)
 
 
 def main():
