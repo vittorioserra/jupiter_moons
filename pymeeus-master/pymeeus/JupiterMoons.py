@@ -578,6 +578,7 @@ class JupiterMoons(object):
         y = 0.0
         z = 0.0
         tau = 0.0
+
         while DELTA != DELTA_old:
             # Calculate light-time delay
             tau = 0.0057755183 * DELTA
@@ -649,12 +650,16 @@ class JupiterMoons(object):
         return X, Y, Z
 
     @staticmethod
-    def check_phenomena(epoch):
+    def check_phenomena(epoch, check_all=True, i_sat=0):
         """This method returns the perspective distance to any phenomena of all
         satellites for the given epoch.
 
         :param epoch: Epoch the calculations should be made for
         :type epoch: :py:class:'Epoch'
+        :param check_all: Whether all satellites should be checked
+        :type check_all: bool
+        :param i_sat: Which satellite should be checked
+        :type i_sat: int
 
         :returns: Distance to the satellite being ecclipsed, occulted in penumbra
         :rtype: tuple
@@ -675,31 +680,36 @@ class JupiterMoons(object):
         # TODO: tbd: delay by tau because of later observations from the Earth
         Coords_Sun = JupiterMoons.rectangular_positions(epoch, solar=True)
 
-        # Result matrix, where each rows is for a satellite
-        # Column 0: Occultation
-        # Column 1: Eclipse
-        # TODO Column 2: Penumbra
-        result_matrix = [[0.0, 0.0, 0.0],
-                         [0.0, 0.0, 0.0],
-                         [0.0, 0.0, 0.0],
-                         [0.0, 0.0, 0.0]]
+        if check_all is True:
+            # Result matrix, where each rows is for a satellite
+            # Column 0: Occultation
+            # Column 1: Eclipse
+            # TODO Column 2: Penumbra
+            result_matrix = [[0.0, 0.0, 0.0],
+                             [0.0, 0.0, 0.0],
+                             [0.0, 0.0, 0.0],
+                             [0.0, 0.0, 0.0]]
 
-        for i in range(len(result_matrix)):
-            # Coordinates for the iterated satellite
-            X = Coords_Earth[i][0]
-            Y = Coords_Earth[i][1]
-            Z = Coords_Earth[i][2]
+            for i in range(len(result_matrix)):
+                # Coordinates for the iterated satellite
+                X = Coords_Earth[i][0]
+                Y = Coords_Earth[i][1]
+                Z = Coords_Earth[i][2]
 
-            X_0 = Coords_Sun[i][0]
-            Y_0 = Coords_Sun[i][1]
-            Z_0 = Coords_Sun[i][2]
+                X_0 = Coords_Sun[i][0]
+                Y_0 = Coords_Sun[i][1]
+                Z_0 = Coords_Sun[i][2]
 
-            # Check occultation
-            result_matrix[i][0] = JupiterMoons.check_occulation(X, Y, Z)
-            # Check eclipse
-            result_matrix[i][1] = JupiterMoons.check_eclipse(X_0, Y_0, Z_0)
+                # Check occultation
+                result_matrix[i][0] = JupiterMoons.check_occulation(X, Y, Z)
+                # Check eclipse
+                result_matrix[i][1] = JupiterMoons.check_eclipse(X_0, Y_0, Z_0)
 
-        return result_matrix
+            return result_matrix
+        else:
+            return JupiterMoons.check_occulation(Coords_Earth[i_sat - 1][0], Coords_Earth[i_sat - 1][0],
+                                                 Coords_Earth[i_sat - 1][0]), JupiterMoons.check_eclipse(
+                Coords_Sun[i_sat - 1][0], Coords_Sun[i_sat - 1][0], Coords_Sun[i_sat - 1][0])
 
     @staticmethod
     def is_phenomena(epoch):
