@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+
 import functools
+import multiprocessing
 
 from typing import List, Tuple
 
@@ -80,6 +82,8 @@ class Calculation:
     rough timings using binary search.
     """
 
+    cpu_core_count = 8
+
     def __init__(self, start_epoch: Epoch, end_epoch: Epoch, time_step: float, tol: float = 0.0):
         """ Constructor for Calculation class
 
@@ -92,7 +96,13 @@ class Calculation:
         :param tol: Tolerance for detecting phenomena (0: rough timing
             triggers if distance to phenomena < 1 [Jupiter's radii])
         :type tol: float
+
+        :raises: ValueError, if start is later than end of calculation
         """
+
+        # Check start_epoch and end_epoch
+        if start_epoch > end_epoch:
+            raise ValueError("Start is later than End of Calculation")
 
         # Initialize variables
         self.start_epoch = start_epoch
@@ -100,21 +110,21 @@ class Calculation:
         self.time_step = time_step
 
         # List for all CalculationResults during the timespan
-        self.calc_res: List[CalculationResult] = list()
+        self.calc_res: List[CalculationResult] = []
 
         # Array full of lists for the distances over time
         # Rows: satellites
         # Columns: Phenomena (0: Ocultation, 1: Eclipse, 2: Penumbra)
-        self.distances = [[list(), list(), list()],
-                          [list(), list(), list()],
-                          [list(), list(), list()],
-                          [list(), list(), list()]]
+        self.distances = [[[], [], []],
+                          [[], [], []],
+                          [[], [], []],
+                          [[], [], []]]
 
         # Array full of lists for the timings of the phenomena
-        self.timing_lists = [[list(), list(), list()],
-                             [list(), list(), list()],
-                             [list(), list(), list()],
-                             [list(), list(), list()]]
+        self.timing_lists = [[[], [], []],
+                             [[], [], []],
+                             [[], [], []],
+                             [[], [], []]]
 
         # Start calculation
         self.calculate(self.start_epoch, self.end_epoch, self.time_step, tol)
@@ -138,10 +148,43 @@ class Calculation:
 
         :rtype: None
         """
-        # TODO Multi-Threading
+
+        # Calc time span each process has to calculate
+        time_span_per_core = (end_epoch - start_epoch) / self.cpu_core_count
+
+        # Set up Queue
+        procs = []
+        queue_cal = multiprocessing.Queue()
+
+        # Start process for each core
+        for i in range(self.cpu_core_count):
+            proc = multiprocessing.Process(target=self.mp_calculate_position, args=(
+                queue_cal, start_epoch + i * time_span_per_core, start_epoch + (i + 1) * time_span_per_core, time_step))
+            procs.append(proc)
+            proc.start()
+
+        results = []
+
+        # Number of already finished processes
+        processes_finished = 0
+
+        # Read Queue until all processes have finished
+        while processes_finished < self.cpu_core_count:
+            res = queue_cal.get()
+            results.append(res)
+            processes_finished += 1
+
+        # Wait for remaining processes to finish
+        for i in procs:
+            i.join()
+
+        # Add results to calculation
+        self.calc_res.clear()
+        for lst in results:
+            self.calc_res.extend(lst)
 
         # Calculate coordinates (distances) in respect to phenomena
-        self.calc_res.extend(self.make_calculation(start_epoch, end_epoch, time_step))
+        # self.calc_res.extend(self.make_calculation(start_epoch, end_epoch, time_step))
         # Fill distances array
         self.list_distances()
 
@@ -156,20 +199,111 @@ class Calculation:
                 self.timing_lists[row][col].extend(self.find_phenomena(self.distances[row][col], tol))
         print("Got rough timings")
 
+        # Set up Queue for comunication between Processes
+        queue_bs = multiprocessing.Queue()
+        # List for processes
+        procs = []
+
         # Get exact timings
         # Iteration through timing_lists
         for row in range(len(self.timing_lists)):
             for col in range(len(self.timing_lists[row]) - 1):  # TODO remove -1 for penumbra
-                # Iteration through current timing_list in timing_lists[row][col]
-                for i in range(len(self.timing_lists[row][col])):
-                    # Get current content of the list
-                    content = self.timing_lists[row][col][i]
-                    # Calculate and write exact timing together with former content
-                    self.timing_lists[row][col][i] = (
-                        content, self.find_start_end(self.calc_res[content[0]].epoch, time_step, row, col, content[1]))
+                # Set up process
+                proc = multiprocessing.Process(target=self.mp_binarysearch,
+                                               args=(queue_bs, self.timing_lists[row][col], row, col))
+                # Start process
+                procs.append(proc)
+                proc.start()
+
+        results = []
+
+        # Number of finished processes
+        processes_finished = 0
+
+        # Read Queue while not all processes have finished
+        while processes_finished < len(procs):
+            res = queue_bs.get()
+            results.append(res)
+            processes_finished += 1
+
+        # Wait for all processes to finish
+        for i in procs:
+            i.join()
+
+        # Clear timing_lists
+        self.timing_lists = Calculation.apply_to_2d_array(lambda x: [], self.timing_lists)
+
+        # Rearrange results in timing_lists
+        for lst in results:
+            for timing in lst:
+                self.timing_lists[timing[3]][timing[4]].append(timing)
+
         print("Got exact timings")
 
+        number_of_timings = 0
+
+        for row in self.timing_lists:
+            for lst in row:
+                number_of_timings += len(lst)
+
+        print("Found ", number_of_timings, " timings")
+
         return
+
+    @staticmethod
+    def mp_calculate_position(queue: multiprocessing.Queue, start_epoch: Epoch, end_epoch: Epoch,
+                              time_step: float):
+        """Method that handels a multiprocessing task for calculating coordinates
+        for Epochs in the given timespan with given time step. The results will
+        be written to the queue.
+
+        :param queue: Queue for communication with other processes
+        :type queue: multiprocessing.Queue
+        :param start_epoch: Start Epoch for calculation
+        :type start_epoch: Epoch
+        :param end_epoch: Start Epoch for calculation
+        :type end_epoch: Epoch
+        :param time_step: Time step for the calculation
+        :type time_step: float
+
+        :rtype: None
+        """
+
+        # Write calculation result to Queue for communication with other processes
+        queue.put(Calculation.make_calculation(start_epoch, end_epoch, time_step))
+
+    def mp_binarysearch(self, queue: multiprocessing.Queue, timing_list: list, row: int, col: int) -> None:
+        """Method that handels task (binary search to find exact timings)
+        of one process in order to implement multiprocessing to use multiple
+        CPU cores for the calculation.
+
+        :param queue: Queue for communication with other processes
+        :type queue: multiprocessing.Queue
+        :param timing_list: List calculation of exact timings will be made
+        :type timing_list: list
+        :param row: Row of the timing_list in timing_lists
+        :type row: int
+        :param col: Column of the timing_list in timing_lists
+        :type col: int
+
+        :rtype: None
+        """
+
+        result = []
+
+        # Iteration through given timing_list
+        for i in range(len(timing_list)):
+            # Get current content of the list
+            content = timing_list[i]
+            # Calculate and write exact timing together with former content and array coordinates
+            result.append((
+                content[0], content[1],
+                self.find_start_end(self.calc_res[content[0]].epoch, self.time_step, row, col, content[1]), row, col))
+
+        # Add result to Queue
+        queue.put(result)
+
+        print("Exact timings for Satellite ", row + 1, ", phenomenom: ", col, " calculated")
 
     @staticmethod
     def make_calculation(start_epoch: Epoch, end_epoch: Epoch, time_step: float) -> List[CalculationResult]:
@@ -188,7 +322,7 @@ class Calculation:
         """
 
         # Set up return variable
-        dist_list: List[CalculationResult] = list()
+        dist_list: List[CalculationResult] = []
 
         # Set current Epoch for iteration
         curr_epoch = start_epoch
@@ -199,7 +333,7 @@ class Calculation:
             dist_list.append(CalculationResult(curr_epoch, JupiterMoons.check_phenomena(curr_epoch)))
             # Increase current Epoch by time step
             curr_epoch += time_step
-        print("Coordinate Calculation finished")
+        print("Coordinate Calculation finished for: ", start_epoch, " - ", end_epoch)
 
         return dist_list
 
@@ -244,7 +378,7 @@ class Calculation:
         # Set flag
         is_phenomena = False
         # Set up return variable
-        timing_list: List[Tuple[int, str]] = list()
+        timing_list: List[Tuple[int, str]] = []
 
         # Iterate through distance_list
         for i in range(len(distance_list)):
@@ -350,10 +484,10 @@ class Calculation:
 
 if __name__ == "__main__":
     epoch_start = Epoch()
-    epoch_start.set(1992, 1, 1, 0 + 59 / 3600)
+    epoch_start.set(2020, 1, 1, 0)
 
     epoch_stop = Epoch()
-    epoch_stop.set(1992, 2, 1, 0 + 59 / 3600)
+    epoch_stop.set(2021, 1, 1, 0)
 
     # 1 s in jd = 1.157401129603386e-05
     calc_time_step = 60 * 120 * 1.157401129603386e-05

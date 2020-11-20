@@ -833,9 +833,8 @@ class JupiterMoons(object):
         else:
             return -1 * JupiterMoons.check_coordinates(X_0, Y_0)
 
-
     @staticmethod
-    def round_base_cone_param(epoch, ellipsoid = False):
+    def round_base_cone_param(epoch, ellipsoid=False):
         """This method constructs a round base cone modelling jupiters shadow. This model actually assumed that both
         jupiter and the sun are perfect spheres, thus is mathematically unprecise
 
@@ -848,34 +847,33 @@ class JupiterMoons(object):
 
         """
 
-        #define radius of the sun and of jupiter
+        # define radius of the sun and of jupiter
         sun_radius_au = 0.00465047
         jupiter_radius_au = 0.10045 * sun_radius_au
 
-        if (ellipsoid ==True) :
+        if ellipsoid:
             jupiter_radius_au = jupiter_radius_au * 1.071374
-
 
         # Check if Epoch is given
         if epoch is not None:
             # Check types
             if isinstance(epoch, Epoch):
-                #calcuate the position of jupiter in solar-spherical coordinates
+                # calcuate the position of jupiter in solar-spherical coordinates
                 l, b, r = Jupiter.geometric_heliocentric_position(epoch)
 
-                #alpha is the umbra defining angle
-                alpha_cone_rad = atan(r/(sun_radius_au-jupiter_radius_au))
+                # alpha is the umbra defining angle
+                alpha_cone_rad = atan(r / (sun_radius_au - jupiter_radius_au))
 
-                #beta is the penumbra defing angle
-                beta_cone_rad = atan(r/(sun_radius_au+jupiter_radius_au))
+                # beta is the penumbra defing angle
+                beta_cone_rad = atan(r / (sun_radius_au + jupiter_radius_au))
 
-                #compute distance of the sharpest pint behind jupiter in jupiter radii
+                # compute distance of the sharpest pint behind jupiter in jupiter radii
                 cone_vertex_jupiter_radii = tan(alpha_cone_rad)
-                cone_penumbra_basis_jupiter_radii = cone_vertex_jupiter_radii * tan(beta_cone_rad) + 1 #the +1 compensates for the missing jupiter radius
+                cone_penumbra_basis_jupiter_radii = cone_vertex_jupiter_radii * tan(
+                    beta_cone_rad) + 1  # the +1 compensates for the missing jupiter radius
                 return (alpha_cone_rad, cone_vertex_jupiter_radii, beta_cone_rad, cone_penumbra_basis_jupiter_radii)
             else:
                 raise TypeError("Invalid input type")
-                return -1
 
     @staticmethod
     def check_umbra_eclipse(X, Y, Z, alpha_cone_rad):
@@ -890,32 +888,32 @@ class JupiterMoons(object):
         param Z: Z-coordinate of the satellite in Jupiter's radii
         :type Z: float
         param alpha_cone_rad: angle defining the inclination of the shadow of jupiter, in radians
-        :type alpha_cone_rad: :float
+        :type alpha_cone_rad: float
 
         :returns: Position of the satellite if it's central point is included in Jupiter's umbra, else (-1,-1,-1)
         :rtype: float
         """
 
-        #first rotate the shadow point to the jupiter system of coordinates
-        #the shadow point lays on the plane of the ecliptic
-        #it should be consistent with the coordinates-system giving sun-based coordinates
+        # first rotate the shadow point to the jupiter system of coordinates
+        # the shadow point lays on the plane of the ecliptic
+        # it should be consistent with the coordinates-system giving sun-based coordinates
 
-        r_moon = sqrt(X**2 + Y**2 + Z**2)
+        r_moon = sqrt(X ** 2 + Y ** 2 + Z ** 2)
 
-        a = tan(alpha_cone_rad- pi/2)**2 +1
-        b = -2*tan(alpha_cone_rad- pi/2)
-        c = 1-r_moon**2
+        a = tan(alpha_cone_rad - pi / 2) ** 2 + 1
+        b = -2 * tan(alpha_cone_rad - pi / 2)
+        c = 1 - r_moon ** 2
 
-        delta = b**2 -4*a*c
+        delta = b ** 2 - 4 * a * c
 
-        x_1 = (-b + sqrt(delta))/(2*a)
+        x_1 = (-b + sqrt(delta)) / (2 * a)
 
         shadow_depth_jupiter_radii = x_1
-        shadow_diameter_jupiter_radii = 2*(1-tan(alpha_cone_rad-pi/2)*x_1)
+        shadow_diameter_jupiter_radii = 2 * (1 - tan(alpha_cone_rad - pi / 2) * x_1)
 
-        dist_from_jupiter_center = sqrt(X**2 + Y**2)
+        dist_from_jupiter_center = sqrt(X ** 2 + Y ** 2)
 
-        if((Z > 0) and (dist_from_jupiter_center < shadow_diameter_jupiter_radii/2)):
+        if (Z > 0) and (dist_from_jupiter_center < shadow_diameter_jupiter_radii / 2):
             return X, Y, Z
         else:
             return (-1, -1, -1)
@@ -932,36 +930,37 @@ class JupiterMoons(object):
         :type Y: float
         param Z: Z-coordinate of the satellite in Jupiter's radii
         :type Z: float
-        param alpha_cone_rad: angle defining the inclination of the shadow of jupiter, in radians
-        :type alpha_cone_rad: :float
+        :param beta_cone_rad: angle defining the inclination of the shadow of jupiter, in radians
+        :type beta_cone_rad: float
 
         :returns: Position of the satellite if it's central point is included in Jupiter's penumbra, else (-1,-1,-1)
         :rtype: float
         """
 
-        #first rotate the shadow point to the jupiter system of coordinates
-        #the shadow point lays on the plane of the ecliptic
-        #it should be consistent with the coordinates-system giving sun-based coordinates
+        # first rotate the shadow point to the jupiter system of coordinates
+        # the shadow point lays on the plane of the ecliptic
+        # it should be consistent with the coordinates-system giving sun-based coordinates
 
-        r_moon = sqrt(X**2 + Y**2 + Z**2)
+        r_moon = sqrt(X ** 2 + Y ** 2 + Z ** 2)
 
-        a = tan(beta_cone_rad- pi/2)**2 +1
-        b = -2*tan(beta_cone_rad- pi/2)
-        c = 1-r_moon**2
+        a = tan(beta_cone_rad - pi / 2) ** 2 + 1
+        b = -2 * tan(beta_cone_rad - pi / 2)
+        c = 1 - r_moon ** 2
 
-        delta = b**2 -4*a*c
+        delta = b ** 2 - 4 * a * c
 
-        x_1 = (-b + sqrt(delta))/(2*a)
+        x_1 = (-b + sqrt(delta)) / (2 * a)
 
         shadow_depth_jupiter_radii = x_1
-        shadow_diameter_jupiter_radii = 2*(1-tan(beta_cone_rad-pi/2)*x_1)
+        shadow_diameter_jupiter_radii = 2 * (1 - tan(beta_cone_rad - pi / 2) * x_1)
 
-        dist_from_jupiter_center = sqrt(X**2 + Y**2)
+        dist_from_jupiter_center = sqrt(X ** 2 + Y ** 2)
 
-        if((Z > 0) and (dist_from_jupiter_center < shadow_diameter_jupiter_radii/2)):
+        if ((Z > 0) and (dist_from_jupiter_center < shadow_diameter_jupiter_radii / 2)):
             return X, Y, Z
         else:
             return (-1, -1, -1)
+
 
 def main():
     # Let's define a small helper function
