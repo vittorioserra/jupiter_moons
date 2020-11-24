@@ -37,10 +37,11 @@ class JupiterMoons(object):
     """
 
     @staticmethod
-    def rectangular_positions(epoch, tofk5=True, solar=False):
+    def rectangular_positions(epoch, tofk5=True, solar=False, do_correction: bool=True):
         """This method computes the rectangular geocentric position of Jupiter's
         satellites for a given epoch, using the E5-theory.
 
+        :param do_correction: bool indicating whether or not to apply the correction
         :param epoch: Epoch to compute satellites' positions, as an Epoch object
         :type epoch: :py:class:`Epoch`
         :param tofk5: Whether or not the small correction to convert to the FK5
@@ -456,11 +457,12 @@ class JupiterMoons(object):
         Callisto = JupiterMoons.apparent_rectangular_coordinates(epoch, X_4, Y_4, Z_4, OMEGA_ascending_node_jupiter,
                                                                  psi_corrected, i_ecliptic_jupiter, lambda_0, beta_0, D)
 
-        # Calculate corrected coordinates
-        Io = JupiterMoons.correct_rectangular_positions(R_1, 1, DELTA, Io)
-        Europa = JupiterMoons.correct_rectangular_positions(R_2, 2, DELTA, Europa)
-        Ganimed = JupiterMoons.correct_rectangular_positions(R_3, 3, DELTA, Ganimed)
-        Callisto = JupiterMoons.correct_rectangular_positions(R_4, 4, DELTA, Callisto)
+        if do_correction:
+            # Calculate corrected coordinates
+            Io = JupiterMoons.correct_rectangular_positions(R_1, 1, DELTA, Io)
+            Europa = JupiterMoons.correct_rectangular_positions(R_2, 2, DELTA, Europa)
+            Ganimed = JupiterMoons.correct_rectangular_positions(R_3, 3, DELTA, Ganimed)
+            Callisto = JupiterMoons.correct_rectangular_positions(R_4, 4, DELTA, Callisto)
 
         return Io, Europa, Ganimed, Callisto
 
@@ -844,7 +846,38 @@ def main():
     print("*** Use of JupiterMoons class")
     print(35 * "*" + "\n")
 
+    epoch: Epoch = Epoch(2020, 11, 14.28125)
+    io_corr_true, europe_corr_true, ganimed_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch, do_correction=False)
+    print(f"Positions of Jupiter Moons (Io) - todo(add more description): {io_corr_true}")
+    print(f"Positions of Jupiter Moons (Europe) - todo(add more description): {europe_corr_true}")
+    print(f"Positions of Jupiter Moons (Ganymed) - todo(add more description): {ganimed_corr_true}")
+    print(f"Positions of Jupiter Moons (Callisto) - todo(add more description): {callisto_corr_true}")
+
+    io_corr_false, europe_corr_false, ganimed_corr_false, callisto_corr_false = JupiterMoons.rectangular_positions(epoch, do_correction=True)
+    print(f"Positions of Jupiter Moons (Io) - todo(add more description): {io_corr_false}")
+    print(f"Positions of Jupiter Moons (Europe) - todo(add more description): {europe_corr_false}")
+    print(f"Positions of Jupiter Moons (Ganymed) - todo(add more description): {ganimed_corr_false}")
+    print(f"Positions of Jupiter Moons (Callisto) - todo(add more description): {callisto_corr_false}")
+
+    print(f"{io_corr_true[0] - io_corr_false[0]}")
+    print(f"{io_corr_true[1] - io_corr_false[1]}")
+    print(f"{io_corr_true[2] - io_corr_false[2]}")
+    print(f"{europe_corr_true[0] - europe_corr_false[0]}")
+    print(f"{europe_corr_true[1] - europe_corr_false[1]}")
+    print(f"{europe_corr_true[2] - europe_corr_false[2]}")
+    print(f"{ganimed_corr_true[0] - ganimed_corr_false[0]}")
+    print(f"{ganimed_corr_true[1] - ganimed_corr_false[1]}")
+    print(f"{ganimed_corr_true[2] - ganimed_corr_false[2]}")
+    print(f"{callisto_corr_true[0] - callisto_corr_false[0]}")
+    print(f"{callisto_corr_true[1] - callisto_corr_false[1]}")
+    print(f"{callisto_corr_true[2] - callisto_corr_false[2]}")
+
+    result = JupiterMoons.check_coordinates(io_corr_true[0], io_corr_true[1])
+    # TODO - low prio: add distinction occultation / eclipse
+    print(f"{result} z={io_corr_true[2]}")
     # TODO: add more functions to main()
+    JupiterMoons.is_phenomena(epoch)
+
 
 
 if __name__ == "__main__":
