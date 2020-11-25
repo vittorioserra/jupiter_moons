@@ -131,23 +131,23 @@ class JupiterMoons(object):
         sum1 = 0
         sum1 += 0.47259 * sin(2 * radians(l_1 - l_2))
         sum1 -= 0.03478 * sin(radians(pi_3 - pi_4))
-        sum1 += 0.01081 * sin(radians(l_2 - 2 * l_3 + pi_3))
+        sum1 += 0.01081 * sin(radians(l_2 - 2.0 * l_3 + pi_3))
         sum1 += 0.00738 * sin(radians(PHI_lambda))
-        sum1 += 0.00713 * sin(radians(l_2 - 2 * l_3 + pi_2))
-        sum1 -= 0.00674 * sin(radians(pi_1 + pi_3 - 2 * PI - 2 * G))
-        sum1 += 0.00666 * sin(radians(l_2 - 2 * l_3 + pi_4))
+        sum1 += 0.00713 * sin(radians(l_2 - 2.0 * l_3 + pi_2))
+        sum1 -= 0.00674 * sin(radians(pi_1 + pi_3 - 2.0 * PI - 2.0 * G))
+        sum1 += 0.00666 * sin(radians(l_2 - 2.0 * l_3 + pi_4))
         sum1 += 0.00445 * sin(radians(l_1 - pi_3))
         sum1 -= 0.00354 * sin(radians(l_1 - l_2))
-        sum1 -= 0.00317 * sin(radians(2 * psi - 2 * PI))
+        sum1 -= 0.00317 * sin(radians(2.0 * psi - 2.0 * PI))
         sum1 += 0.00265 * sin(radians(l_1 - pi_4))
         sum1 -= 0.00186 * sin(radians(G))
         sum1 += 0.00162 * sin(radians(pi_2 - pi_3))
-        sum1 += 0.00158 * sin(radians(4 * (l_1 - l_2)))
+        sum1 += 0.00158 * sin(radians(4.0 * (l_1 - l_2)))
         sum1 -= 0.00155 * sin(radians(l_1 - l_3))
-        sum1 -= 0.00138 * sin(radians(psi + omega_3 - 2 * PI - 2 * G))
-        sum1 -= 0.00115 * sin(radians(2 * (l_1 - 2 * l_2 + omega_2)))
+        sum1 -= 0.00138 * sin(radians(psi + omega_3 - 2.0 * PI - 2.0 * G))
+        sum1 -= 0.00115 * sin(radians(2.0 * (l_1 - 2.0 * l_2 + omega_2)))
         sum1 += 0.00089 * sin(radians(pi_2 - pi_4))
-        sum1 += 0.00085 * sin(radians(l_1 + pi_3 - 2 * PI - 2 * G))
+        sum1 += 0.00085 * sin(radians(l_1 + pi_3 - 2.0 * PI - 2.0 * G))
         sum1 += 0.00083 * sin(radians(omega_2 - omega_3))
         sum1 += 0.00053 * sin(radians(psi - omega_2))
 
@@ -286,6 +286,12 @@ class JupiterMoons(object):
         sum4 -= 0.00019 * sin(radians(2 * l_4 - pi_3 - pi_4))
         sum4 -= 0.00018 * sin(radians(l_4 - pi_4 + G))
         sum4 -= 0.00016 * sin(radians(l_4 + pi_3 - 2 * PI - 2 * G))
+
+        print(f"sum1: {sum1}")
+        print(f"sum2: {sum2}")
+        print(f"sum3: {sum3}")
+        print(f"sum4: {sum4}")
+
 
         # True longitudes of the satellites
         L1 = l_1 + sum1
@@ -848,7 +854,12 @@ def main():
     print("*** Use of JupiterMoons class")
     print(35 * "*" + "\n")
 
-    epoch: Epoch = Epoch(2020, 11, 14.28125)
+    # epoch: Epoch = Epoch(2020, 11, 14.28125)
+    # epoch = Epoch(1992, 12, 16.00068)
+    # epoch = Epoch(1992, 12, 16, utc=True)
+    epoch = Epoch(2448972.500685)
+    print(f"epoch.jde()={epoch.jde()}")
+
     io_corr_true, europe_corr_true, ganimed_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch, do_correction=True)
     print(f"Positions of Jupiter Moons (Io) - todo(add more description): {io_corr_true}")
     print(f"Positions of Jupiter Moons (Europe) - todo(add more description): {europe_corr_true}")

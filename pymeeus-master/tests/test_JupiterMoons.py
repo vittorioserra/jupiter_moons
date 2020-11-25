@@ -1,7 +1,10 @@
 from unittest import TestCase
-from ..pymeeus.JupiterMoons import JupiterMoons
+
+from pymeeus.JupiterMoons import JupiterMoons
 from pymeeus.base import TOL
 from pymeeus.Epoch import Epoch
+
+EPOCH_1992_12_16_UTC = Epoch(1992, 12, 16.00068)
 
 
 class TestJupiterMoons(TestCase):
@@ -13,38 +16,44 @@ class TestJupiterMoons(TestCase):
         chapter 44 (page 313-314)"""
 
         """Epoch used for the calculations in meeus chapter 44"""
-        epoch = Epoch(1992, 12, 16)
-
+        # epoch = Epoch(1992, 12, 16.00068)
+        # epoch = Epoch(1992, 12, 16, utc=True)
+        # epoch = Epoch(2448972.50068)
+        epoch = EPOCH_1992_12_16_UTC
 
         io_corr_true, europe_corr_true, ganymede_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch, do_correction=True)
 
-        assert abs(round(io_corr_true[0], 4) - 3.4502) < TOL, \
+        # exp(ected)_precision
+        exp_prec3: int = 3
+        exp_prec4: int = 4
+
+        assert abs(round(io_corr_true[0], exp_prec3) + round(3.4502, exp_prec3)) < TOL, \
             """ERROR: 1st rectangular position (X) for Io of JupiterMoons.rectangular_position() test doesn't match"""
 
-        assert abs(round(io_corr_true[1], 4) - 0.2137) < TOL, \
+        assert abs(round(io_corr_true[1], exp_prec3) - round(0.2137, exp_prec3)) < TOL, \
             """ERROR: 2nd rectangular position (Y) for Io of JupiterMoons.rectangular_position() test doesn't match"""
 
-        assert abs(round(europe_corr_true[0], 4) - 7.4418) < TOL, \
+        assert abs(round(europe_corr_true[0], exp_prec4) - round(7.4418, exp_prec4)) < TOL, \
             """ERROR: 1st rectangular position (X) for Europe of JupiterMoons.rectangular_position()
             test doesn't match"""
 
-        assert abs(round(europe_corr_true[1], 4) - 0.2753) < TOL, \
+        assert abs(round(europe_corr_true[1], exp_prec3) - round(0.2753, exp_prec3)) < TOL, \
             """ERROR: 2nd rectangular position for (Y) Europe of JupiterMoons.rectangular_position()
             test doesn't match"""
 
-        assert abs(round(ganymede_corr_true[0], 4) - 1.2011) < TOL, \
+        assert abs(round(ganymede_corr_true[0], exp_prec3) - round(1.2011, exp_prec3)) < TOL, \
             """ERROR: 1st rectangular position (X) for Ganymede of JupiterMoons.rectangular_position()
             test doesn't match"""
 
-        assert abs(round(ganymede_corr_true[1], 4) - 0.5900) < TOL, \
+        assert abs(round(ganymede_corr_true[1], exp_prec4) - round(0.5900, exp_prec4)) < TOL, \
             """ERROR: 1st rectangular position (X) for Ganymede of JupiterMoons.rectangular_position()
             test doesn't match"""
 
-        assert abs(round(callisto_corr_true[0], 4) - 7.0720) < TOL, \
+        assert abs(round(callisto_corr_true[0], exp_prec3) - round(7.0720, exp_prec3)) < TOL, \
             """ERROR: 1st rectangular position (X) for Callisto of JupiterMoons.rectangular_position() 
             test doesn't match"""
 
-        assert abs(round(callisto_corr_true[1], 4) - 1.0291) < TOL, \
+        assert abs(round(callisto_corr_true[1], exp_prec3) - round(1.0291, exp_prec3)) < TOL, \
             """ERROR: 2nd rectangular position for (Y) Callisto of JupiterMoons.rectangular_position()
             test doesn't match"""
 
@@ -53,11 +62,16 @@ class TestJupiterMoons(TestCase):
         for a given epoch by iteration. """
 
         """Epoch used for the calculations in meeus chapter 44"""
-        epoch = Epoch(1992, 12, 16)
+        epoch = Epoch(1992, 12, 16.00068)
+        # epoch = Epoch(1992, 12, 16, utc=True)
 
         delta, tau = JupiterMoons.calculate_DELTA(epoch)
 
-        assert abs(round(delta, 4) - 5.6612) < TOL, \
+        # exp(ected)_value: as taken from Meeus
+        exp_val: float = 5.6611239
+        exp_prec: int = 5
+        # assert abs(round(delta, 4) - 5.6612) < TOL, \
+        assert abs(round(delta, exp_prec) - round(exp_val, exp_prec)) < TOL, \
             """ERROR: Distance between earth and Jupiter of JupiterMoons.calculate_DELTA()
             doesn't match"""
 
@@ -66,14 +80,14 @@ class TestJupiterMoons(TestCase):
         """This method tests the method correct_rectangular_positions() that corrects the rectangular geocentric
         position of Jupiter's satellites for a given epoch as described
         in astronomical algorithm chapter 44 page: 313 -314. """
-
-        epoch = Epoch(1992, 12, 16)
+        epoch = EPOCH_1992_12_16_UTC
+        # epoch = Epoch(1992, 12, 16)
 
         """ calculate corrected rectangular positions for the Jupiter moons"""
         io_corr_true, europe_corr_true, ganymede_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch, do_correction=True)
 
         """ calculate uncorrected rectangular positions for the Jupiter moons"""
-        io_corr_false, europe_corr_false, ganymede_corr_true_corr_false, callisto_corr_false = JupiterMoons.rectangular_positions(epoch, do_correction=False)
+        io_corr_false, europe_corr_false, ganymede_corr_false, callisto_corr_false = JupiterMoons.rectangular_positions(epoch, do_correction=False)
 
         """calculate difference of corrected and uncorrected rectangular coordinates and compare  coordinate 
         for satellite I and satellite 4 with the maximum correction possible as described
@@ -110,7 +124,7 @@ class TestJupiterMoons(TestCase):
         y_correct_ellipsoid = 1.071374
 
         """limits of perspective distance to Jupiter's center in Jupiter's radii for a phenomena"""
-        x_start_phenomena = 1
+        x_start_phenomena = 0
         y_start_phenomena = 1/y_correct_ellipsoid
 
         """calculate perspective distance to Jupiter's center in Jupiter's radii"""
