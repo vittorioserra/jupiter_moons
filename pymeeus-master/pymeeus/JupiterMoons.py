@@ -22,6 +22,8 @@ from math import sin, cos, sqrt, tan, atan, atan2, radians, degrees, pi
 from pymeeus.Epoch import Epoch
 from pymeeus.Sun import Sun
 from pymeeus.Jupiter import Jupiter
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
 
 
 class JupiterMoons(object):
@@ -876,8 +878,9 @@ def main():
     # TODO - low prio: add distinction occultation / eclipse
     print(f"{result} z={io_corr_true[2]}")
     # TODO: add more functions to main()
-    JupiterMoons.is_phenomena(epoch)
-
+    gv_output = GraphvizOutput(output_file="./docs/callgraphs/callgraph.png", font_size=18, group_font_size=22)
+    with PyCallGraph(gv_output):
+        JupiterMoons.is_phenomena(epoch)
 
 
 if __name__ == "__main__":
