@@ -841,19 +841,19 @@ def main():
     def print_me(msg, val):
         print("{}: {}".format(msg, val))
 
-    # Let's show some uses of Sun functions
+    # Let's show some uses of JupiterMoons functions
     print("\n" + 35 * "*")
     print("*** Use of JupiterMoons class")
     print(35 * "*" + "\n")
 
     epoch: Epoch = Epoch(2020, 11, 14.28125)
-    io_corr_true, europe_corr_true, ganimed_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch, do_correction=False)
+    io_corr_true, europe_corr_true, ganimed_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch, do_correction=True)
     print(f"Positions of Jupiter Moons (Io) - todo(add more description): {io_corr_true}")
     print(f"Positions of Jupiter Moons (Europe) - todo(add more description): {europe_corr_true}")
     print(f"Positions of Jupiter Moons (Ganymed) - todo(add more description): {ganimed_corr_true}")
     print(f"Positions of Jupiter Moons (Callisto) - todo(add more description): {callisto_corr_true}")
 
-    io_corr_false, europe_corr_false, ganimed_corr_false, callisto_corr_false = JupiterMoons.rectangular_positions(epoch, do_correction=True)
+    io_corr_false, europe_corr_false, ganimed_corr_false, callisto_corr_false = JupiterMoons.rectangular_positions(epoch, do_correction=False)
     print(f"Positions of Jupiter Moons (Io) - todo(add more description): {io_corr_false}")
     print(f"Positions of Jupiter Moons (Europe) - todo(add more description): {europe_corr_false}")
     print(f"Positions of Jupiter Moons (Ganymed) - todo(add more description): {ganimed_corr_false}")
