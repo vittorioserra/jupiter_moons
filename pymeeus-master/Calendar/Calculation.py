@@ -362,17 +362,25 @@ class Calculation:
         # Set up sorted list for timings
         sorted_timings: List[TimingResult] = []
 
-        number_of_timings = 0
-
         for row in self.timing_lists:
             for lst in row:
-                number_of_timings += len(lst)
                 sorted_timings.extend(lst)
 
         self.sorted_timings = sorted(sorted_timings)
 
-        self.number_of_timings = number_of_timings
-        print("Found ", number_of_timings, " timings")
+        # Remove timings later than end_epoch
+        to_pop: List[int] = []
+
+        for i in range(len(self.sorted_timings)):
+            if self.sorted_timings[i].epoch > end_epoch or self.sorted_timings[i].epoch < start_epoch:
+                to_pop.append(i)
+
+        for i in sorted(to_pop, reverse=True):
+            self.sorted_timings.pop(i)
+            print("Removed at ", i)
+
+        self.number_of_timings = len(self.sorted_timings)
+        print("Found ", self.number_of_timings, " timings")
 
         return
 
@@ -504,10 +512,10 @@ class Calculation:
         """
 
         # Set flag
-        if distance_list[0] > 1:
+        if distance_list[0] > 1 + tol or distance_list[0] < 0:
             is_phenomena = False
         else:
-            is_phenomena = JupiterMoons.is_phenomena(self.start_epoch - self.time_step)[row][col]
+            is_phenomena = 0 <= JupiterMoons.check_phenomena(self.start_epoch - self.time_step)[row][col] <= 1 + tol
 
         # Set up return variable
         timing_list: List[TimingResult] = []
@@ -695,26 +703,19 @@ class Calculation:
 
 if __name__ == "__main__":
     epoch_start = Epoch()
+    epoch_start.set(2020, 1, 1, 0)
+
     epoch_stop = Epoch()
+    epoch_stop.set(2020, 3, 1, 0)
 
-    year = 2020
-
-    for month in range(1, 13):
-        epoch_start.set(year, month, 1, 0)
-        if month < 12:
-            epoch_stop.set(year, month + 1, 1, 0)
-        elif month == 12:
-            epoch_stop.set(year + 1, 1, 1, 0)
-        print(month)
-        calc = Calculation(epoch_start, epoch_stop, 120*60*s_jd, 0.0)
-
-    # epoch_start = Epoch()
-    # epoch_start.set(2020, 1, 1, 0)
-    #
-    # epoch_stop = Epoch()
-    # epoch_stop.set(2021, 1, 1, 0)
-    #
     # # 1 s in jd = 1.157401129603386e-05
-    # calc_time_step = 60 * 255 * 1.157401129603386e-05
+    # calc_time_step = 60 * 30 * 1.157401129603386e-05
     #
-    # Calculation(epoch_start, epoch_stop, calc_time_step, 2.5)
+    # calc1 = Calculation(epoch_start, epoch_stop, calc_time_step, 0)
+
+    # 1 s in jd = 1.157401129603386e-05
+    calc_time_step = 60 * 350 * 1.157401129603386e-05
+
+    calc2 = Calculation(epoch_start, epoch_stop, calc_time_step, 2.75)
+
+    print()
