@@ -143,7 +143,7 @@ class Phenomena(object):
             position_matrix[:, 1] = position_matrix[:, 1] * 1.071347
 
             # calculate the form of the shadow
-            alpha_rad, vertex_jr, beta_rad, beta_vertex = JupiterMoons.round_base_cone_param(epoch, True)  # True
+            alpha_rad, vertex_jr, beta_rad, beta_vertex = Phenomena.round_base_cone_param(epoch, True)  # True
 
             alpha_comp = np.pi / 2 - alpha_rad
 
@@ -312,7 +312,7 @@ class Phenomena(object):
             position_matrix[:, 1] = position_matrix[:, 1] * 1.071347
 
             # calculate the form of the shadow
-            alpha_rad, vertex_jr, beta_rad, beta_vertex = JupiterMoons.round_base_cone_param(epoch, True)  # True
+            alpha_rad, vertex_jr, beta_rad, beta_vertex = Phenomena.round_base_cone_param(epoch, True)  # True
 
             alpha_comp = np.pi / 2 - alpha_rad
 
@@ -484,7 +484,7 @@ class Phenomena(object):
             position_matrix[:, 1] = position_matrix[:, 1] * 1.071347
 
             # calculate the form of the shadow
-            alpha_rad, vertex_jr, beta_rad, beta_vertex = JupiterMoons.round_base_cone_param(epoch, True)  # True
+            alpha_rad, vertex_jr, beta_rad, beta_vertex = Phenomena.round_base_cone_param(epoch, True)  # True
 
             alpha_comp = np.pi / 2 - alpha_rad
 
@@ -641,3 +641,4 @@ for i in penumbra_vector :
 for i in shadow_vector:
     if (i != 0):
         i = Phenomena.time_correction(base_epoch + i)
+
