@@ -485,8 +485,7 @@ class Calculation:
                     # Fill distance list
                     self.distances[row][col].append(ele.dist_matrix[row][col])
 
-    @staticmethod
-    def find_phenomena(distance_list: list, row: int, col: int, tol: float = 0.0) -> List[TimingResult]:
+    def find_phenomena(self, distance_list: list, row: int, col: int, tol: float = 0.0) -> List[TimingResult]:
         """This method finds rough timings of start and end of phenomena
         for a given course of distances.
 
@@ -505,7 +504,11 @@ class Calculation:
         """
 
         # Set flag
-        is_phenomena = False
+        if distance_list[0] > 1:
+            is_phenomena = False
+        else:
+            is_phenomena = JupiterMoons.is_phenomena(self.start_epoch - self.time_step)[row][col]
+
         # Set up return variable
         timing_list: List[TimingResult] = []
 
@@ -692,12 +695,26 @@ class Calculation:
 
 if __name__ == "__main__":
     epoch_start = Epoch()
-    epoch_start.set(2020, 1, 1, 0)
-
     epoch_stop = Epoch()
-    epoch_stop.set(2020, 3, 1, 0)
 
-    # 1 s in jd = 1.157401129603386e-05
-    calc_time_step = 60 * 120 * 1.157401129603386e-05
+    year = 2020
 
-    Calculation(epoch_start, epoch_stop, calc_time_step, 1.5)
+    for month in range(1, 13):
+        epoch_start.set(year, month, 1, 0)
+        if month < 12:
+            epoch_stop.set(year, month + 1, 1, 0)
+        elif month == 12:
+            epoch_stop.set(year + 1, 1, 1, 0)
+        print(month)
+        calc = Calculation(epoch_start, epoch_stop, 120*60*s_jd, 0.0)
+
+    # epoch_start = Epoch()
+    # epoch_start.set(2020, 1, 1, 0)
+    #
+    # epoch_stop = Epoch()
+    # epoch_stop.set(2021, 1, 1, 0)
+    #
+    # # 1 s in jd = 1.157401129603386e-05
+    # calc_time_step = 60 * 255 * 1.157401129603386e-05
+    #
+    # Calculation(epoch_start, epoch_stop, calc_time_step, 2.5)
