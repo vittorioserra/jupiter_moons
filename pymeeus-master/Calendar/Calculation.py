@@ -82,7 +82,7 @@ class Calculation:
     rough timings using binary search.
     """
 
-    cpu_core_count = 8
+    cpu_core_count = 10
 
     def __init__(self, start_epoch: Epoch, end_epoch: Epoch, time_step: float, tol: float = 0.0):
         """ Constructor for Calculation class
@@ -108,6 +108,8 @@ class Calculation:
         self.start_epoch = start_epoch
         self.end_epoch = end_epoch
         self.time_step = time_step
+        self.tol = tol
+        self.number_of_timings = 0
 
         # List for all CalculationResults during the timespan
         self.calc_res: List[CalculationResult] = []
@@ -156,10 +158,33 @@ class Calculation:
         procs = []
         queue_cal = multiprocessing.Queue()
 
-        # Start process for each core
+        # Make sure all calculations have same time step
+        desired_epochs = []
+        actual_epochs = []
+
+        # Calculate desired time spans for all processes
         for i in range(self.cpu_core_count):
+            desired_epochs.append((start_epoch + i * time_span_per_core, start_epoch + (i + 1) * time_span_per_core))
+
+        last_end_epoch = desired_epochs[0][0]
+
+        # Set up actual time span for all processes
+        for i in range(len(desired_epochs)):
+            actual_start = last_end_epoch
+            actual_end = last_end_epoch
+
+            # Move end until desired end is reached
+            while actual_end < desired_epochs[i][1]:
+                actual_end += time_step
+
+            last_end_epoch = actual_end
+
+            actual_epochs.append((actual_start, actual_end))
+
+        # Start process for each core
+        for i in range(len(actual_epochs)):
             proc = multiprocessing.Process(target=self.mp_calculate_position, args=(
-                queue_cal, start_epoch + i * time_span_per_core, start_epoch + (i + 1) * time_span_per_core, time_step))
+                queue_cal, actual_epochs[i][0], actual_epochs[i][1], time_step))
             procs.append(proc)
             proc.start()
 
@@ -246,6 +271,7 @@ class Calculation:
             for lst in row:
                 number_of_timings += len(lst)
 
+        self.number_of_timings = number_of_timings
         print("Found ", number_of_timings, " timings")
 
         return
@@ -298,7 +324,8 @@ class Calculation:
             # Calculate and write exact timing together with former content and array coordinates
             result.append((
                 content[0], content[1],
-                self.find_start_end(self.calc_res[content[0]].epoch, self.time_step, row, col, content[1]), row, col))
+                self.find_start_end_cons_tol(self.calc_res[content[0]].epoch, self.time_step, row, col, content[1],
+                                             self.tol), row, col))
 
         # Add result to Queue
         queue.put(result)
@@ -418,6 +445,87 @@ class Calculation:
         return res
 
     @staticmethod
+    def find_start_end_cons_tol(first_appereance: Epoch, time_step: float, row: int, col: int, appereance_type: str,
+                                tol: float = 0.0) -> Epoch:
+        """This method implements binary search for finding
+        exact Epochs for given rough timings of phenomena. It changes
+        behavior considering whether there was a tolerance for finding rough
+        timings.
+
+        :param first_appereance: Rough Epoch the phenomenom (start or
+            end) first appeared
+        :type first_appereance: float
+        :param time_step: Time step the calculation was done
+        :type time_step: float
+        :param row: Corresponding row in the timing_lists array (i.e.
+            row = Number of satellite - 1)
+        :type row: int
+        :param col: Corresponding column in the timing_lists array (i.e.
+            col = 0: Ocultation, col = 1: Eclipse, col = 2: Penumbra)
+        :type row: int
+        :param appereance_type: Which type of appereance was detected
+            ("start" or "end")
+        :type appereance_type: str
+        :param tol: Tolerance for finding rough timings
+        :type tol: float
+
+        :returns: Exact Epoch for begin or end of the phenomenom
+        :rtype: Epoch
+
+        :raises: ValueError, if appereance_type is invalid
+        """
+
+        if tol == 0.0:
+            # Regular behavior if no tolerance
+            return Calculation.find_start_end(first_appereance, time_step, row, col, appereance_type)
+        else:
+            # Safe search time step to find when the phenomenom really occurs
+            search_time_step = 60 * 60 * s_jd
+
+            # Condition for phenomenom start
+            if appereance_type == "start":
+                # If there is a phenomenom in the given time step
+                if JupiterMoons.is_phenomena(first_appereance)[row][col] and not \
+                        JupiterMoons.is_phenomena(first_appereance - time_step)[row][col]:
+                    return Calculation.find_start_end(first_appereance, time_step, row, col, appereance_type)
+
+                cur_epoch = first_appereance
+
+                # Whether there is an phenomenom at the end of the first appereance time step
+                is_phenomena_end = JupiterMoons.is_phenomena(cur_epoch)[row][col]
+
+                # Move time step until there is a phenomenom
+                while not is_phenomena_end:
+                    cur_epoch += search_time_step
+                    is_phenomena_end = JupiterMoons.is_phenomena(cur_epoch)[row][col]
+
+                return Calculation.find_start_end(cur_epoch, search_time_step, row, col, appereance_type)
+
+            # Condition for phenomenom end
+            elif appereance_type == "end":
+                # If there is a phenomenom in the given time step
+                if not JupiterMoons.is_phenomena(first_appereance)[row][col] and \
+                        JupiterMoons.is_phenomena(first_appereance - time_step)[row][col]:
+                    return Calculation.find_start_end(first_appereance, time_step, row, col, appereance_type)
+
+                cur_epoch = first_appereance - time_step
+
+                # Whether there is an phenomenom at the start of the first appereance time step
+                is_phenomena_start = JupiterMoons.is_phenomena(cur_epoch)[row][col]
+
+                # Move time step until there is a phenomenom
+                while not is_phenomena_start:
+                    cur_epoch -= search_time_step
+                    is_phenomena_start = JupiterMoons.is_phenomena(cur_epoch)[row][col]
+
+                return Calculation.find_start_end(cur_epoch + search_time_step, search_time_step, row, col,
+                                                  appereance_type)
+
+            # Input string invalid
+            else:
+                raise ValueError("Input string invalid")
+
+    @staticmethod
     def find_start_end(first_appereance: Epoch, time_step: float, row: int, col: int, appereance_type: str) -> Epoch:
         """ This recursive method implements binary search for finding
         exact Epochs for given rough timings of phenomena
@@ -444,8 +552,6 @@ class Calculation:
             nor "end", or no phenomenom was detected for the given
             inputs
         """
-
-        # TODO take into account tolerance in find_phenomena() (could be that first_appereance doesn't correlate with phenomena)
 
         # Termination condition, if time_step (accuracy) is below 1 second
         if time_step >= s_jd:
@@ -487,9 +593,9 @@ if __name__ == "__main__":
     epoch_start.set(2020, 1, 1, 0)
 
     epoch_stop = Epoch()
-    epoch_stop.set(2021, 1, 1, 0)
+    epoch_stop.set(2020, 3, 1, 0)
 
     # 1 s in jd = 1.157401129603386e-05
-    calc_time_step = 60 * 120 * 1.157401129603386e-05
+    calc_time_step = 60 * 390 * 1.157401129603386e-05
 
-    Calculation(epoch_start, epoch_stop, calc_time_step, 0.0)
+    Calculation(epoch_start, epoch_stop, calc_time_step, 0)
