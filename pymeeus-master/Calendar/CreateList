@@ -21,15 +21,15 @@ class CreateList(object):
         f.write("\\usepackage{setspace, multicol, graphicx}\n")
         f.write("\\usepackage[footsepline]{scrlayer-scrpage}\n")
         f.write("\\usepackage[english]{babel}\n")
-        f.write("\\usepackage[utf8]{inputenc}\n")
+        # f.write("\\usepackage[utf8]{inputenc}\n")
         f.write("\\linespread{0.93}\n")
-        f.write("\\pagestyle{scrheadings}\n")
+        # f.write("\\pagestyle{scrheadings}\n")
 
         f.write("\\begin{document}\n")
         f.write("\\centering\n")
 
     @staticmethod
-    def print_page_header(f: TextIO, epoch: Epoch):
+    def print_page_header(f: TextIO, epoch: Epoch) -> None:
         """ prints the title on top of the page
         :param f: tex file into which is written
         :type f: TextIO
@@ -58,13 +58,12 @@ class CreateList(object):
             12: "DECEMBER"
         }
         f.write(switcher.get(month))
-        print(switcher.get(month) + str(month))
         f.write("\\vspace{0.1cm}\n")
-        f.write("\\hrule\n\\vspace{-0.35cm}\n")
+        f.write("\\hrule\n\\vspace{-0.2cm}\n")
 
     @classmethod
     def print_event(cls, f: TextIO, epoch1: Epoch, satellite: int, type1: str, type2: str, type3: str,
-                    row_counter: int, column_counter: int, previous_day: int = 0):
+                    row_counter: int, column_counter: int, previous_day: int = 0) -> tuple:
         """ prints a single event to a tex file, tex file has to be opened and a tabular has to be already started
                 :param f: tex file into which is written
                 :type f: TextIO
@@ -151,39 +150,13 @@ class CreateList(object):
         previous_day = day
         return row_counter, column_counter, previous_day
 
-    def create_chronological_list(self, timing_lists):
-        chronological = []
-
-        for satellite in range(0, len(timing_lists)):
-            for event_type in range(0, len(timing_lists[satellite])):
-                chronological.extend(timing_lists[satellite][event_type])
-
-        chronological = self.quick_sort(chronological)  # sort list
-        print(chronological)
-        return chronological
-
-    def quick_sort(self, array: List) -> List:
-        if len(array) <= 1:
-            return array
-        else:
-            pivot_pos = int(len(array)/2)
-            pivot = array[pivot_pos]
-            epoch_pivot: Epoch = array[pivot_pos][2]
-
-            less_than_pivot: List = []
-            more_than_pivot: List = []
-
-            for pos in range(0, len(array)):
-                epoch_pos: Epoch = array[pos][2]
-
-                if epoch_pos.__le__(epoch_pivot) and pos != pivot_pos:
-                    less_than_pivot.append(array[pos])
-                elif pos != pivot_pos:
-                    more_than_pivot.append(array[pos])
-
-            return self.quick_sort(less_than_pivot) + [pivot] + self.quick_sort(more_than_pivot)
-
     def print_list(self, year) -> None:
+        """
+        :param year: Year for which the list is created
+        :type year: int
+
+        :rtype: None
+        """
         f: TextIO = open("C:/Users/sophi/Desktop/Temp/myfile.tex", "w")
         self.print_file_header(f)
         epoch_start = Epoch()
@@ -195,7 +168,7 @@ class CreateList(object):
         column_counter = 3
         previous_day: int = 0
 
-        for month in range(1, 5):
+        for month in range(1, 6):
             epoch_start.set(year, month, 1, 0)
             if month < 12:
                 epoch_stop.set(year, month + 1, 1, 0)
@@ -207,29 +180,28 @@ class CreateList(object):
 
             calc = Calculation(epoch_start, epoch_stop, calc_time_step, 0.0)
 
-            chronological_list = self.create_chronological_list(calc.timing_lists)
-            print(len(chronological_list))
-            for pos in range(0, len(chronological_list)):
+            print(len(calc.sorted_timings))
+            x = len(calc.sorted_timings)
+            for pos in range(0, x):
+                row = calc.sorted_timings[pos].row
+                epoch = calc.sorted_timings[pos].epoch
+                col = calc.sorted_timings[pos].col
 
-                epoch1: Epoch = chronological_list[pos][2]
-                event_type = 0
-                satellite = 0
-                if event_type == 0:
+                if col == 0:
                     type1 = "OC"
-                elif event_type == 1:
+                elif col == 1:
                     type1 = "EC"
                 else:
                     type1 = "-"
 
-                if chronological_list[pos][1] == 'start':
+                if calc.sorted_timings[pos].appereance_type == 'start':
                     type2 = "D"
                 else:
                     type2 = "F"
                 type3 = "---"
 
-                row_counter, column_counter, previous_day = self.print_event(f, epoch1, satellite, type1, type2,
-                                                                             type3, row_counter, column_counter,
-                                                                             previous_day)
+                row_counter, column_counter, previous_day = self.print_event(f, epoch, row, type1, type2, type3,
+                                                                             row_counter, column_counter, previous_day)
             if row_counter < 76:
                 f.write("\t \t \\end{tabular}\n \t}\n")
                 f.write("\\end{multicols}\n")
