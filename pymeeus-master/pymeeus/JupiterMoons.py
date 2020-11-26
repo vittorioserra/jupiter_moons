@@ -16,7 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import logging
+import sys
 from math import sin, cos, sqrt, tan, atan, atan2, radians, degrees, pi
 
 from pymeeus.Epoch import Epoch
@@ -25,6 +26,10 @@ from pymeeus.Jupiter import Jupiter
 from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
 
+
+_logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                    format="[%(asctime)s] %(levelname)s:%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
 class JupiterMoons(object):
     """
@@ -287,10 +292,10 @@ class JupiterMoons(object):
         sum4 -= 0.00018 * sin(radians(l_4 - pi_4 + G))
         sum4 -= 0.00016 * sin(radians(l_4 + pi_3 - 2 * PI - 2 * G))
 
-        print(f"sum1: {sum1}")
-        print(f"sum2: {sum2}")
-        print(f"sum3: {sum3}")
-        print(f"sum4: {sum4}")
+        _logger.debug("sum1: {sum1}")
+        _logger.debug("sum2: {sum2}")
+        _logger.debug("sum3: {sum3}")
+        _logger.debug("sum4: {sum4}")
 
 
         # True longitudes of the satellites
