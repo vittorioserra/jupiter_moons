@@ -112,15 +112,16 @@ class CreateList(object):
         if row_counter == 74 or row_counter == 75:
             f.write("\t \t \\end{tabular}\n \t}\n")
             row_counter = 0
-            if column_counter == 3:
-                f.write("\\end{multicols}\n")
-                f.write("\\pagebreak\n")
-                cls.print_page_header(f, epoch1)
-                f.write("\\begin{multicols}{3}\n")
-                column_counter = 0
+
+        if column_counter == 3 and row_counter == 0:
+            f.write("\\end{multicols}\n")
+            f.write("\\pagebreak\n")
+            cls.print_page_header(f, epoch1)
+            f.write("\\begin{multicols}{3}\n")
+            column_counter = 0
 
         if row_counter == 0:  # print header
-            f.write("\t \\resizebox{0.3\\textwidth}{!}{\n")
+            f.write("\t \\resizebox{0.325\\textwidth}{!}{\n")
             f.write("\t \t \\begin{tabular}{c c c c c c}\n")
             f.write(
                 "\t \t \t \\textbf{day} & \\textbf{h} & \\textbf{m} & \\textbf{s} & \\textbf{SAT.} & \\textbf{TYPE}\\\\\n")
@@ -157,7 +158,7 @@ class CreateList(object):
 
         :rtype: None
         """
-        f: TextIO = open("C:/Users/sophi/Desktop/Temp/myfile.tex", "w")
+        f: TextIO = open("C:/Users/sophi/Desktop/Phenomena_of_Jupiters_galilean_Satelittes/" + str(year) + ".tex", "w")
         self.print_file_header(f)
         epoch_start = Epoch()
         epoch_stop = Epoch()
@@ -165,48 +166,41 @@ class CreateList(object):
         calc_time_step = 60 * 120 * 1.157401129603386e-05  # 2h
 
         row_counter = 0
-        column_counter = 3
+        column_counter = 0
         previous_day: int = 0
+        previous_month: int = 0
 
-        for month in range(1, 6):
-            epoch_start.set(year, month, 1, 0)
-            if month < 12:
-                epoch_stop.set(year, month + 1, 1, 0)
-            elif month == 12:
-                epoch_stop.set(year + 1, 1, 1, 0)
+        epoch_start.set(year, 1, 1, 0)
+        epoch_stop.set(year + 1, 1, 1, 0)
 
-            self.print_page_header(f, epoch_start)
-            f.write("\\begin{multicols}{3}\n")
+        calc = Calculation(epoch_start, epoch_stop, calc_time_step, 0.0)
 
-            calc = Calculation(epoch_start, epoch_stop, calc_time_step, 0.0)
+        x = len(calc.all_timings_sorted)
+        for pos in range(0, x):
+            epoch = calc.all_timings_sorted[pos].phenomenom.epoch
+            year, month, day = epoch.get_date()
+            row = calc.all_timings_sorted[pos].row
+            type1 = calc.all_timings_sorted[pos].phenomenom.phenomenom_type
+            if calc.all_timings_sorted[pos].appereance_type == 'start':
+                type2 = "D"
+            else:
+                type2 = "F"
+            type3 = calc.all_timings_sorted[pos].phenomenom.shadow_type
+            if previous_month != month:
+                previous_month = month
+                if row_counter < 76 and month != 1:
+                    f.write("\t \t \\end{tabular}\n \t}\n")
+                    f.write("\\end{multicols}\n")
+                    row_counter = 0
+                    column_counter = 0
+                self.print_page_header(f, epoch)
+                f.write("\\begin{multicols}{3}\n")
 
-            print(len(calc.sorted_timings))
-            x = len(calc.sorted_timings)
-            for pos in range(0, x):
-                row = calc.sorted_timings[pos].row
-                epoch = calc.sorted_timings[pos].epoch
-                col = calc.sorted_timings[pos].col
-
-                if col == 0:
-                    type1 = "OC"
-                elif col == 1:
-                    type1 = "EC"
-                else:
-                    type1 = "-"
-
-                if calc.sorted_timings[pos].appereance_type == 'start':
-                    type2 = "D"
-                else:
-                    type2 = "F"
-                type3 = "---"
-
-                row_counter, column_counter, previous_day = self.print_event(f, epoch, row, type1, type2, type3,
-                                                                             row_counter, column_counter, previous_day)
-            if row_counter < 76:
-                f.write("\t \t \\end{tabular}\n \t}\n")
-                f.write("\\end{multicols}\n")
-                row_counter = 0
-                column_counter = 0
+            row_counter, column_counter, previous_day = self.print_event(f, epoch, row, type1, type2, type3,
+                                                                         row_counter, column_counter, previous_day)
+        if row_counter < 76:
+            f.write("\t \t \\end{tabular}\n \t}\n")
+            f.write("\\end{multicols}\n")
         f.write("\\end{document}\n")
 
 
