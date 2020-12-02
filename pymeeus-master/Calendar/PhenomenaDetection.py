@@ -6,11 +6,11 @@ from pymeeus.Epoch import Epoch
 from pymeeus.Jupiter import Jupiter
 from pymeeus.JupiterMoons import JupiterMoons
 
-from math import atan, tan, sqrt, pi, asin, sin
+from math import atan, tan, sqrt
 
 # Radius of Jupiter moons in Jupiter's radii
 # moons_radii = [3643.2 / (2 * 69911), 3121.6 / (2 * 69911), 5262.4 / (2 * 69911), 4820.6 / (2 * 69911)]
-moons_radii = [3643.2 / (2 * 71492), 3121.6 / (2 * 71492), 5262.4 / (2 * 71492), 4820.6 / (2 * 71492)]#[1821/71492, 1565/71492, 2634/71492, 2403/71492]#
+moons_radii = [3643.2 / (2 * 71492), 3121.6 / (2 * 71492), 5262.4 / (2 * 71492), 4820.6 / (2 * 71492)]
 
 
 @functools.total_ordering
@@ -302,7 +302,8 @@ class Detection:
 
             # Return Phenomena instance
             return Phenomenom(Detection.phenomena_types_str[Detection.phenomena_types_str.index(phenomenom_type)],
-                              i_sat, distance, Coords[i_sat][2], epoch, r_umbra, r_penumbra)
+                              i_sat, distance, Coords[i_sat][2], epoch, r_umbra,
+                              r_penumbra)
 
     @staticmethod
     def check_phenomena(epoch: Epoch) -> List[List[Phenomenom]]:
@@ -402,33 +403,13 @@ class Detection:
 
         alpha_rad, cone_alpha_vertex, beta_rad, cone_beta_vertex = Detection.round_base_cone_param(epoch)
 
-        r_umbra = (abs(cone_alpha_vertex) + z) * (tan(alpha_rad))#/ abs(cone_alpha_vertex)
-        r_penumbra = (abs(cone_beta_vertex) - z) * tan(beta_rad)
+        r_umbra = (abs(cone_alpha_vertex) - z) / abs(cone_alpha_vertex)
+        r_penumbra = (abs(cone_beta_vertex) + z) / abs(cone_beta_vertex)
 
         return r_umbra, r_penumbra
 
     @staticmethod
-    def cone_radius_high_accuracy(epoch: Epoch, z: float):
-        """Calculates the radius of umbra and penumbra shadow for
-        a given z-Coordinate (z > 0 -> more distant than Jupiter)
-        :param epoch: Epoch the calculation should be made for
-        :type epoch: Epoch
-        :param z: Z-Coordinate in Jupiter's radii
-        :type z: float
-
-        :returns: Radius of umbra and penumbra shadow in Jupiter's
-            radii
-        """
-
-        alpha_rad, cone_alpha_vertex, beta_rad, cone_beta_vertex = Detection.round_base_cone_param(epoch)
-
-        r_umbra = abs(-1 - z * tan(pi/2 - alpha_rad))
-        r_penumbra = abs(1 - z * tan(pi/2 -beta_rad))
-
-        return r_umbra, r_penumbra
-
-    @staticmethod
-    def round_base_cone_param(epoch: Epoch, ellipsoid: bool = True) -> tuple:
+    def round_base_cone_param(epoch: Epoch, ellipsoid: bool = True):
         """This method constructs a cone modelling jupiter's shadow
 
         :param epoch: Epoch that should be checked
@@ -472,19 +453,14 @@ class Detection:
                 l, b, r = Jupiter.geometric_heliocentric_position(epoch)
 
                 # alpha is the umbra defining angle
-
-                alpha_cone_rad = asin((sun_radius_au - jupiter_radius_au)/r)
-                alpha_comp_cone_rad = pi/2 - alpha_cone_rad
+                alpha_cone_rad = atan(r / (sun_radius_au - jupiter_radius_au))
 
                 # beta is the penumbra defing angle
-                beta_cone_rad = asin((sun_radius_au + jupiter_radius_au)/r)
-                beta_comp_cone_rad = pi/2 - beta_cone_rad
+                beta_cone_rad = atan(r / (sun_radius_au + jupiter_radius_au))
 
                 # Compute distance of the sharpest pint behind jupiter in jupiter radii
-
-                cone_vertex_jupiter_radii = 1/sin(alpha_cone_rad)
-
-                cone_beta_vertex_jupiter_radii = -(1)/sin(beta_cone_rad)
+                cone_vertex_jupiter_radii = tan(alpha_cone_rad)
+                cone_beta_vertex_jupiter_radii = (-1 * jupiter_radius_multiplicator * tan(beta_cone_rad))
 
                 return alpha_cone_rad, cone_vertex_jupiter_radii, beta_cone_rad, cone_beta_vertex_jupiter_radii
             else:
@@ -492,7 +468,8 @@ class Detection:
 
 
 if __name__ == "__main__":
-    test_epoch = Epoch(2458930.6661776793) + 1.157401129603386e-05 * 2
+    test_epoch = Epoch()
+    test_epoch.set(2020, 1, 2, 12, 36, 0)
 
     res = Detection.check_phenomena(test_epoch)
 
