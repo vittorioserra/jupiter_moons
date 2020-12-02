@@ -906,7 +906,7 @@ def main():
     print(f"uncorrected positions of Io in Jupiter radii referred to Jupiter (X, Y, Z): {io_corr_false}")
     print(f"uncorrected positions of Europe in Jupiter radii referred to Jupiter (X, Y, Z): {europe_corr_false}")
     print(f"uncorrected positions of Ganymede in Jupiter radii referred to Jupiter (X, Y, Z):  {ganimed_corr_false}")
-    print(f"uncorrected positions of Callisto in Jupiter radii referred to Jupiter (X, Y, Z): {callisto_corr_false}")
+    print(f" uncorrected positions of Callisto in Jupiter radii referred to Jupiter (X, Y, Z): {callisto_corr_false}")
 
     # Compute the correction of each Jupiter moon
     print(f"correction of position of Io in Jupiter radii (X, Y, Z): {io_corr_true[0] - io_corr_false[0]}"
