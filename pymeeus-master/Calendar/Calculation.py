@@ -96,7 +96,7 @@ class TimingResult(Result):
             phenomenom_flag = ["EXT", "INT"]
 
         # Time step for search
-        time_step = s_jd * 5
+        time_step = s_jd * 2
 
         # If timing is start of phenomenom
         if self.appereance_type == "start":
@@ -877,7 +877,7 @@ if __name__ == "__main__":
     epoch_start.set(2020, 1, 1, 0)
 
     epoch_stop = Epoch()
-    epoch_stop.set(2020, 1, 2, 0)
+    epoch_stop.set(2021, 1, 1, 0)
 
     calc_time_step = 60 * 120 * 1.157401129603386e-05
 
