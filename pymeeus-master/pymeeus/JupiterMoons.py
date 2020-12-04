@@ -865,6 +865,7 @@ def main():
     io_occ_start_2021_01_17_00_55_11 = Epoch(2021, 1, 17.0383217592593)
     start = time.time()
     for i in range(1000):
+        io_occ_start_2021_01_17_00_55_11 = Epoch(2021, 1, 17.0383217592593 + 0.002*i)
         result_matrix = JupiterMoons.check_phenomena(io_occ_start_2021_01_17_00_55_11)
     end = time.time()
     print('Gesamtzeit: {:5.3f}s'.format(end - start))
