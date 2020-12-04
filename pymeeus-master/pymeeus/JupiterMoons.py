@@ -864,7 +864,8 @@ def main():
     # Lets compute the result matrix for an occultation of Io (Epoch in TT: 2021, 1, 17.0383217592593)
     io_occ_start_2021_01_17_00_55_11 = Epoch(2021, 1, 17.0383217592593)
     start = time.time()
-    result_matrix = JupiterMoons.check_phenomena(io_occ_start_2021_01_17_00_55_11)
+    for i in range(1000):
+        result_matrix = JupiterMoons.check_phenomena(io_occ_start_2021_01_17_00_55_11)
     end = time.time()
     print('Gesamtzeit: {:5.3f}s'.format(end - start))
 
