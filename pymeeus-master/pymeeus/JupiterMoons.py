@@ -852,7 +852,6 @@ class JupiterMoons(object):
 
 def main():
 
-    start = time.time()
     # Let's define a small helper function
     def print_me(msg, val):
         print("{}: {}".format(msg, val))
@@ -864,7 +863,10 @@ def main():
 
     # Lets compute the result matrix for an occultation of Io (Epoch in TT: 2021, 1, 17.0383217592593)
     io_occ_start_2021_01_17_00_55_11 = Epoch(2021, 1, 17.0383217592593)
-    result_matrix = JupiterMoons.is_phenomena(io_occ_start_2021_01_17_00_55_11)
+    start = time.time()
+    result_matrix = JupiterMoons.check_phenomena(io_occ_start_2021_01_17_00_55_11)
+    end = time.time()
+    print('Gesamtzeit: {:5.3f}s'.format(end - start))
 
     print("structure of result matrix:")
     print("[[occultation of Io =True/False, eclipse of Io =  True/False, not applied]")
@@ -931,9 +933,6 @@ def main():
                                            "callgraph_old_version.png", font_size=18, group_font_size=22)
     with PyCallGraph(gv_output):
         JupiterMoons.is_phenomena(epoch)
-
-    end = time.time()
-    print('Gesamtzeit: {:5.3f}s'.format(end - start))
 
 if __name__ == "__main__":
     main()
