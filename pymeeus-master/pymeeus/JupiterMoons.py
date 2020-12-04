@@ -18,6 +18,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import logging
 import sys
+import time
 from math import sin, cos, sqrt, atan, atan2, radians
 
 from pycallgraph import PyCallGraph
@@ -850,6 +851,8 @@ class JupiterMoons(object):
 
 
 def main():
+
+    start = time.time()
     # Let's define a small helper function
     def print_me(msg, val):
         print("{}: {}".format(msg, val))
@@ -924,10 +927,13 @@ def main():
         f"{callisto_corr_true[1] - callisto_corr_false[1]}{callisto_corr_true[2] - callisto_corr_false[2]}")
 
     # TODO: add more functions to main()
-    gv_output = GraphvizOutput(output_file="./docs/callgraphs/callgraph.png", font_size=18, group_font_size=22)
+    gv_output = GraphvizOutput(output_file="C:\\Users\\micha\\Documents\\DHBW\\Studienarbeit\\"
+                                           "callgraph_old_version.png", font_size=18, group_font_size=22)
     with PyCallGraph(gv_output):
         JupiterMoons.is_phenomena(epoch)
 
+    end = time.time()
+    print('Gesamtzeit: {:5.3f}s'.format(end - start))
 
 if __name__ == "__main__":
     main()
