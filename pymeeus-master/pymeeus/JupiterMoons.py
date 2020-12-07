@@ -69,9 +69,8 @@ class JupiterMoons(object):
         y = 0.0
         z = 0.0
         tau = 0.0
-        iterations = 0
 
-        while DELTA != DELTA_old and iterations < 5:
+        while DELTA != DELTA_old:
             # Calculate light-time delay
             tau = 0.0057755183 * DELTA
 
@@ -83,7 +82,6 @@ class JupiterMoons(object):
 
             DELTA_old = DELTA
             DELTA = sqrt(x ** 2 + y ** 2 + z ** 2)
-            iterations += 1
 
         # Calculate Jupiter's geocentric longitude lambda_0 and latitute beta_0
         lambda_0 = atan2(y, x)
@@ -582,9 +580,8 @@ class JupiterMoons(object):
         z = 0.0
         tau = 0.0
         l, b, r = 0, 0, 0
-        iterations = 0
 
-        while DELTA != DELTA_old and iterations < 5:
+        while DELTA != DELTA_old:
             # Calculate light-time delay
             tau = 0.0057755183 * DELTA
 
@@ -596,7 +593,6 @@ class JupiterMoons(object):
 
             DELTA_old = DELTA
             DELTA = sqrt(x ** 2 + y ** 2 + z ** 2)
-            iterations += 1
 
         return DELTA, tau, l, b, r
 
