@@ -96,7 +96,7 @@ class TimingResult(Result):
             phenomenom_flag = ["EXT", "INT"]
 
         # Time step for search
-        time_step = s_jd * 5
+        time_step = s_jd * 2
 
         # If timing is start of phenomenom
         if self.appereance_type == "start":
@@ -310,6 +310,10 @@ class Calculation:
 
         :rtype: None
         """
+
+        # Widen timespan in order to calculate phenomena at the limits
+        start_epoch -= s_jd * 60 * 360
+        end_epoch += s_jd * 60 * 360
 
         # Calc time span each process has to calculate
         time_span_per_core = (end_epoch - start_epoch) / self.cpu_core_count
@@ -632,8 +636,8 @@ class Calculation:
                     # Fill distance list
                     self.distances[row][col].append(ele.dist_matrix[row][col])
 
-    def find_phenomena(self, distance_list: List[Phenomenom], row: int, col: int, tol: float = 0.0) -> List[
-        TimingResult]:
+    def find_phenomena(self, distance_list: List[Phenomenom], row: int, col: int, tol: float = 0.0) \
+            -> List[TimingResult]:
         """This method finds rough timings of start and end of phenomena
         for a given course of distances.
 
@@ -672,8 +676,8 @@ class Calculation:
                 is_phenomena = True
             # Check for end of phenomena
             elif is_phenomena is True and not (
-                    distance_list[i].has_right_z_sign() and distance_list[i].distance <= distance_list[
-                i].get_critical_radius() + tol):
+                    distance_list[i].has_right_z_sign() and distance_list[i].distance <=
+                    distance_list[i].get_critical_radius() + tol):
                 timing_list.append(TimingResult(None, "end", row, col, i, distance_list[i]))
                 is_phenomena = False
 
@@ -877,7 +881,7 @@ if __name__ == "__main__":
     epoch_start.set(2020, 1, 1, 0)
 
     epoch_stop = Epoch()
-    epoch_stop.set(2020, 1, 2, 0)
+    epoch_stop.set(2020, 2, 1, 0)
 
     calc_time_step = 60 * 120 * 1.157401129603386e-05
 
