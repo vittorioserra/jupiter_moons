@@ -2,7 +2,7 @@
 
 
 # PyMeeus: Python module implementing astronomical algorithms.
-# Copyright (C) 2020  Sebastian Veigl
+# Copyright (C) 2020  Michael Lutz, Sohie Scholz, Vittorio Serra, Sebastian Veigl
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -562,7 +562,8 @@ class JupiterMoons(object):
         :param epoch: Epoch the distance should be calculated for.
         :type epoch: :py:class:`Epoch`
 
-        :returns: Distance Earth-Jupiter in AU and light-time delay from Earth-Jupiter
+        :returns: Distance Earth-Jupiter in AU and light-time delay from Earth-Jupiter,
+            together with Coordinates of Jupiter
         :rtype: tuple
 
         :raises: TypeError if input values are wrong type
@@ -578,6 +579,7 @@ class JupiterMoons(object):
         y = 0.0
         z = 0.0
         tau = 0.0
+        l, b, r = 0, 0, 0
 
         while DELTA != DELTA_old:
             # Calculate light-time delay
@@ -592,7 +594,7 @@ class JupiterMoons(object):
             DELTA_old = DELTA
             DELTA = sqrt(x ** 2 + y ** 2 + z ** 2)
 
-        return DELTA, tau
+        return DELTA, tau, l, b, r
 
     @staticmethod
     def correct_rectangular_positions(R, i_sat, DELTA, X_coordinate, Y_coordinate=0, Z_coordinate=0):
