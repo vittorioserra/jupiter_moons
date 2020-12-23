@@ -8,6 +8,9 @@ class CreateList(object):
     def __init__(self, year: int):
         self.print_list(year)
 
+    def __init__(self, path: str, year_start: int, year_stop: int = -1, month_start: int = 1, month_stop: int = 1):
+        self.print_list(year_start, year_stop)
+
     @staticmethod
     def print_file_header(f: TextIO) -> None:
         """ includes all required packages and opens tex file
@@ -123,8 +126,8 @@ class CreateList(object):
         if row_counter == 0:  # print header
             f.write("\t \\resizebox{0.325\\textwidth}{!}{\n")
             f.write("\t \t \\begin{tabular}{c c c c c c}\n")
-            f.write(
-                "\t \t \t \\textbf{day} & \\textbf{h} & \\textbf{m} & \\textbf{s} & \\textbf{SAT.} & \\textbf{TYPE}\\\\\n")
+            f.write("\t \t \t \\textbf{day} & \\textbf{h} & \\textbf{m} & \\textbf{s} & \\textbf{SAT.} & "
+                    "\\textbf{TYPE}\\\\\n")
             column_counter += 1
 
         row_counter += 1
@@ -151,14 +154,18 @@ class CreateList(object):
         previous_day = day
         return row_counter, column_counter, previous_day
 
-    def print_list(self, year) -> None:
+    def print_list(self, path: str, year_start: int, year_stop: int, month_start: int = 1, month_stop: int = 1) -> None:
         """
-        :param year: Year for which the list is created
-        :type year: int
+        :param month_stop:
+        :param month_start:
+        :param year_stop:
+        :param year_start: Year for which the list is created
+        :type year_start: int
 
         :rtype: None
         """
-        f: TextIO = open("C:/Users/sophi/Desktop/Phenomena_of_Jupiters_galilean_Satelittes/" + str(year) + ".tex", "w")
+        f: TextIO = open(path + str(month_start) + "." + str(year_start) + "-" + str(month_stop) + "." + str(year_stop)
+                         + ".tex", "w")
         self.print_file_header(f)
         epoch_start = Epoch()
         epoch_stop = Epoch()
@@ -170,15 +177,24 @@ class CreateList(object):
         previous_day: int = 0
         previous_month: int = 0
 
-        epoch_start.set(year, 1, 1, 0)
-        epoch_stop.set(year + 1, 1, 1, 0)
+        epoch_start.set(year_start, month_start, 1, 0)
+
+        if month_stop == 12:
+            # the phenomenas for the month of month_stop shall be calculated as well
+            epoch_stop.set(year_stop, 1, 1, 0)
+        else:
+            epoch_stop.set(year_stop, month_stop + 1, 1, 0)
+
+        if epoch_start.__ge__(year_stop):
+            raise ValueError("the stop date is before the start date, check parameters 1 to 4 of the constructor of "
+                             "CreateList")
 
         calc = Calculation(epoch_start, epoch_stop, calc_time_step, 0.0)
 
         x = len(calc.all_timings_sorted)
         for pos in range(0, x):
             epoch = calc.all_timings_sorted[pos].phenomenom.epoch
-            year, month, day = epoch.get_date()
+            year_start, month, day = epoch.get_date()
             row = calc.all_timings_sorted[pos].row
             type1 = calc.all_timings_sorted[pos].phenomenom.phenomenom_type
             if calc.all_timings_sorted[pos].appereance_type == 'start':
@@ -205,4 +221,7 @@ class CreateList(object):
 
 
 if __name__ == "__main__":
-    CreateList(2020)
+    path = "C:/Users/sophi/Desktop/Phenomena_of_Jupiters_galilean_Satelittes/"
+
+    # December 2020 to January 2021 (including January)
+    CreateList(path, 2020, 2021, 12, 1)
