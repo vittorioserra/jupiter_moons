@@ -41,12 +41,16 @@ def rising_setting_jupiter(epoch: Epoch, longitude, latitude):
     nutation_longitude = pymeeus.Coordinates.nutation_longitude(epoch)
     # Apparent sidereal time
     theta: float = epoch.apparent_sidereal_time(true_obliquity, nutation_longitude)  # in days
-    theta = theta / 24.0  # in hours
-    theta0 = Angle(theta, ra=True)  # as an angle
+    #theta = theta / 24.0  # in hours
+    #theta0 = Angle(theta, ra=True)  # as an angle
+    theta0 = Angle(theta * 360.985647)
 
     rising, transit, setting = pymeeus.Coordinates.times_rise_transit_set(longitude, latitude, alpha1, delta1,
                                                                           alpha2, delta2, alpha3, delta3, h0,
                                                                           delta_t, theta0)
+    print(rising)
+
+
     epoch_rising = Epoch(year, month, day, rising)
     epoch_transit = Epoch(year, month, day, transit)
     epoch_setting = Epoch(year, month, day, setting)
@@ -108,8 +112,10 @@ def rising_setting_sun(epoch, longitude, latitude):
     nutation_longitude = pymeeus.Coordinates.nutation_longitude(epoch)
     # Apparent sidereal time
     theta: float = epoch.apparent_sidereal_time(true_obliquity, nutation_longitude)  # in days
-    theta = theta / 24.0  # in hours
-    theta0 = Angle(theta, ra=True)  # as an angle
+    #theta = theta / 24.0  # in hours
+
+    theta0 = Angle(theta * 360.985647)
+    #theta0 = Angle(theta, ra=True)  # as an angle
 
     rising, transit, setting = pymeeus.Coordinates.times_rise_transit_set(longitude, latitude, alpha1, delta1,
                                                                           alpha2, delta2, alpha3, delta3, h0,
@@ -156,7 +162,8 @@ if __name__ == "__main__":
     latitude(Angle) – Geodetic latitude, as an Angle object
     """
     # pos of Friedrichshafen
-    longitude = Angle(9.47554)
+    longitude = Angle(-9.47554)
+    #NOTE: according to Meeus Chapter 15, Page 101, longitudes eastward from greenwhich should have a negative sign
     latitude = Angle(47.65689)
 
     VisibilityJupiter(epoch, longitude, latitude)
