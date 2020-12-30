@@ -782,7 +782,7 @@ class JupiterMoons(object):
             # Result matrix, where each rows is for a satellite
             # Column 0: Occultation
             # Column 1: Eclipse
-            # TODO Column 2: Penumbra
+            # Column 2: No use
             result_matrix = [[0.0, 0.0, 0.0],
                              [0.0, 0.0, 0.0],
                              [0.0, 0.0, 0.0],
@@ -817,11 +817,16 @@ class JupiterMoons(object):
         :param epoch: Epoch the calculations should be made for
         :type epoch: :py:class:'Epoch'
 
-        :returns: Distance to the satellite being ecclipsed, occulted in penumbra
+        :returns: Result matrix for the four Galilean satellites
+            Row 1: Io            Column 0: Occultation
+            Row 2: Europa        Column 1: Eclipse
+            Row 3: Ganymede      Column 2: No use
+            Row 4: Callisto
         :rtype: tuple
 
         :raises: TypeError if input values are wrong type
 
+        Generation of result matrix for December 16 at 0h UTC as seen from the Earth
         >>>epoch = 2448972.500685
         >>>result_matrix = JupiterMoons.check_phenomena(epoch)
         >>>print(result_matrix[0])
@@ -876,6 +881,8 @@ class JupiterMoons(object):
         :returns: Perspective distance to Jupiter's center in Jupiter's radii
         :rtype: float
 
+        Calculation of the perspective distance of the planet Io squareroot(X^2 + Y^2) to the center of Jupiter
+        for December 16 at 0h UTC as seen from the Earth
         >>>utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
         >>>result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
         >>>io_radius_to_center_of_jupiter_earth = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
@@ -952,7 +959,7 @@ class JupiterMoons(object):
         :param i_sat: Index of the satellite (only for given Epoch)
         :type i_sat: int
 
-        :returns: erspective distance to center of Jupiter in Jupiter radii as seen from the Sun
+        :returns: perspective distance to center of Jupiter in Jupiter radii as seen from the Sun
         (value of perspective distance is negative when the satellite is closer to the Sun then Jupiter otherwise positive)
         :rtype: float
         :raises: TypeError if input values are wrong type
