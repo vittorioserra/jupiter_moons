@@ -922,9 +922,9 @@ class JupiterMoons(object):
         for December 16 at 0h UTC as seen from the Earth
         >>>utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
         >>>result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
-        >>>io_distance_to_center_of_jupiter_earth = JupiterMoons.check_eclipse(result_matrix[0][0], result_matrix[0][1])
+        >>>io_distance_to_center_of_jupiter_earthview = JupiterMoons.check_eclipse(result_matrix[0][0], result_matrix[0][1])
 
-        >>>print(io_radius_to_center_of_jupiter)
+        >>>print(io_radius_to_center_of_jupiter_earthview)
         -3.457757270630766
         """
 
@@ -969,9 +969,9 @@ class JupiterMoons(object):
         for December 16 at 0h UTC as seen from the Sun
         >>>utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
         >>>result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=True)
-        >>>io_radius_to_center_of_jupiter_sun = JupiterMoons.check_eclipse(result_matrix[0][0], result_matrix[0][1])
+        >>>io_radius_to_center_of_jupiter_sunview = JupiterMoons.check_eclipse(result_matrix[0][0], result_matrix[0][1])
 
-        >>>print(io_radius_to_center_of_jupiter)
+        >>>print(io_radius_to_center_of_jupiter_sunview)
         -2.553301264153796
         """
 
