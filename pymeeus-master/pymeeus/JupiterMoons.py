@@ -60,6 +60,10 @@ class JupiterMoons(object):
             Earth (False) or the Sun (True)
         :type solar: bool
 
+        :param do_correction: Whether the satellites' positions is corrected for the effect of differetn light-time
+         and perspective effect or nit
+        :type do_correction: bool
+
         :returns: Four tuple with the rectangular X, Y and Z coordinates in
             Jupiter radii (float), where Z is positive if the satellite is more
             distant than Jupiter.
@@ -818,10 +822,10 @@ class JupiterMoons(object):
         :type epoch: :py:class:'Epoch'
 
         :returns: Result matrix for the four Galilean satellites
-            Row 1: Io            Column 0: Occultation
-            Row 2: Europa        Column 1: Eclipse
-            Row 3: Ganymede      Column 2: No use
-            Row 4: Callisto
+            Row 0: Io            Column 0: Occultation
+            Row 1: Europa        Column 1: Eclipse
+            Row 2: Ganymede      Column 2: No use
+            Row 3: Callisto
         :rtype: tuple
 
         :raises: TypeError if input values are wrong type
@@ -1002,81 +1006,215 @@ def main():
     print("*** Use of JupiterMoons class")
     print(35 * "*" + "\n")
 
-
-    # Lets compute the result matrix for 1992 December 16 at 0h (Epoch in UTC: 1992, 12, 16)
-
+    # Lets compute the corrected rectangular geocentric position of Jupiter's satellites
+    # for a given epoch, using the E5-theory.
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    io, europa, ganymede, callisto = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00)
 
-    result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
-    io_radius_to_center_of_jupiter = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
-
-    result_matrix = JupiterMoons.check_phenomena(utc_1992_12_16_00_00_00)
-
-    print("structure of result matrix:")
-    print("[[occultation of Io =True/False, eclipse of Io =  True/False, not applied]")
-    print(" [occultation of Europe =True/False, eclipse of Europe =  True/False, not applied]")
-    print(" [occultation of Ganymede =True/False, eclipse of Ganymede =  True/False, not applied]")
-    print(" [occultation of Callisto =True/False, eclipse of Callisto =  True/False, not applied]]")
-
-    print("resultmatrix :")
-    print(result_matrix[0])
-    print(result_matrix[1])
-    print(result_matrix[2])
-    print(result_matrix[3])
-    print("\n")
+    print("Corrected rectangular geocentric position of Io [X, Y , Z]: ", io)
+    #(-3.450168811390241, 0.21370246960509387, -4.818966623735296)
+    print("Corrected rectangular geocentric position of Europa [X, Y , Z]: ", europa)
+    #(7.441869121153001, 0.27524463479625677, -5.747104399729193)
+    print("Corrected rectangular geocentric position of Ganymede [X, Y , Z]: ", ganymede)
+    #(1.201111684800708, 0.5899903274317162, -14.940581367576527)
+    print("Corrected rectangular geocentric position of Callisto [X, Y , Z]: ", callisto)
+    #(7.071943240286434, 1.0289562923230684, -25.224137724734955)
 
     print("")
 
-    # Lets now compute the result matrix for an eclipse of Io (Epoch in TT: 2021, 2, 12.5966898148148)
+    # Lets compute the uncorrected rectangular geocentric position of Jupiter's satellites
+    # for a given epoch, using the E5-theory.
+    #So the effects of different light-time and perspective described in Pymeeus page 313 - 314 are neglected
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    io_uncorrected, europa_uncorrected, ganymede_uncorrected, callisto_uncorrected = \
+        JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, do_correction=False)
+
+    print("Uncorrected rectangular geocentric position of Io [X, Y , Z]: ", io_uncorrected)
+    # (-3.4489935969836503, 0.21361563816963675, -4.818966623735296)
+    print("Uncorrected rectangular geocentric position of Europa [X, Y , Z]: ", europa_uncorrected)
+    # (7.438101803124541, 0.2751112576349763, -5.747104399729193)
+    print("Uncorrected rectangular geocentric position of Ganymede [X, Y , Z]: ", ganymede_uncorrected)
+    # (1.1990581804888616, 0.589247092847632, -14.940581367576527)
+    print("Uncorrected rectangular geocentric position of Callisto [X, Y , Z]: ", callisto_uncorrected)
+    # (7.056237832405445, 1.0267678919629089, -25.224137724734955)
+
+    print("")
+
+    #Lets calculate the distance between Earth and Jupiter (DELTA) for a given epoch.
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    delta, tau = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
+    print("Distance between Earth and Jupiter in AU: ", delta)
+    #5.6611211815432645
+    print("Light-time from Earth to Jupiter in d (day): ", tau)
+    #0.03269590898252075
+
+    print("")
+
+    #Lets calculate the perspective distance in Jupiter radii of all satellites
+    # for an eclipse of Io.
+
     io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
+
+    # Row 0: Io          Column 0: perspective distance as seen from the Earth (occultation if value is less then one)
+    # Row 1: Europa      Column 1: perspective distance as seen from the Sun (eclipse if value is less then one)
+    # Row 2: Ganymede    Column 2: No use
+    # Row 3: Callisto
     result_matrix = JupiterMoons.check_phenomena(io_ecc_start_2021_02_12_14_19_14)
-    print("resultmatrix :")
+
+    # print Row 0
+    print("(perspective distance of Io (Earth View), perspective distance of Io (Sun view), No use): ")
     print(result_matrix[0])
+    #[1.1926058680144362, 0.856027716233023, 0.0]
+
+    # print Row 1
+    print("(perspective distance of Europa (Earth View), perspective distance of Europa (Sun view), No use): ")
     print(result_matrix[1])
+    #[-8.739720236890856, -8.893094092124032, 0.0]
+
+    # print Row 2
+    print("(perspective distance of Ganymede (Earth View), perspective distance of Ganymede (Sun view), No use): ")
     print(result_matrix[2])
+    #[14.069121992481382, 13.8323491767871, 0.0]
+
+    # print Row 3
+    print("(perspective distance of Callisto (Earth View), perspective distance of Callisto (Sun view), No use): ")
+    print(result_matrix[3])
+    #[-2.934134686233644, -3.9904786452498144, 0.0]
 
     print("")
 
-    # Compute the corrected position of the Jupiter moons in Jupiter radii so take the effects of
-    # differential light-time and the perspective effect described in Meeus page 313 -314 into account
-    epoch = Epoch(2020, 11, 27)
-    io_corr_true, europe_corr_true, ganimed_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch,
-                                                                                                               do_correction=True)
-    print(f"corrected positions of Io in Jupiter radii referred to Jupiter  (X, Y, Z): {io_corr_true}")
-    print(f"corrected positions of Europe in Jupiter radii referred to Jupiter (X, Y, Z): {europe_corr_true}")
-    print(f"corrected positions of Ganymede in Jupiter radii referred to Jupiter (X, Y, Z): {ganimed_corr_true}")
-    print(f"corrected positions of Callisto in Jupiter radii referred to Jupiter (X, Y, Z): {callisto_corr_true}")
+    # Lets check if an eclipse or\and occultation for any of the four Galilean satellites is detected for a given epoch
+
+    io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
+
+    #Structure of result matrix
+    # Row 0: Io          Column 0: Occultation True\False
+    # Row 1: Europa      Column 1: Eclipse True\False
+    # Row 2: Ganymede    Column 2: No use
+    # Row 3: Callisto
+
+    result_matrix = JupiterMoons.is_phenomena(io_ecc_start_2021_02_12_14_19_14)
+    #print Row 0
+    print("(Occultation of Io, Eclipse of Io, No use): ")
+    print(result_matrix[0])
+    #[False, True, False]
+
+    # print Row 1
+    print(" (Occultation of Europa, Eclipse of Europa, No use): ")
+    print(result_matrix[1])
+    #[False, False, False]
+
+    # print Row 2
+    print(" (Occultation of Ganymede, Eclipse of Gaymede, No use): ")
+    print(result_matrix[2])
+    #[False,False,False]
+
+    # print Row 3
+    print("(Occultation of Callisto, Eclipse of Callisto, No use): ")
+    print(result_matrix[3])
+    #[False,False,False]
 
     print("")
 
-    # Compute the uncorrected position of the Jupiter moons in Jupiter
-    io_corr_false, europe_corr_false, ganimed_corr_false, callisto_corr_false = JupiterMoons.rectangular_positions(
-        epoch, do_correction=False)
-    print(f"uncorrected positions of Io in Jupiter radii referred to Jupiter (X, Y, Z): {io_corr_false}")
-    print(f"uncorrected positions of Europe in Jupiter radii referred to Jupiter (X, Y, Z): {europe_corr_false}")
-    print(f"uncorrected positions of Ganymede in Jupiter radii referred to Jupiter (X, Y, Z):  {ganimed_corr_false}")
-    print(f" uncorrected positions of Callisto in Jupiter radii referred to Jupiter (X, Y, Z): {callisto_corr_false}")
+    #Calculation of the perspective distance ot the planet Io to the center of Jupiter
+    # for December 16 at 0h UTC as seen from the Sun
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
+    io_radius_to_center_of_jupiter_sun = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
 
-    # Compute the correction of X and Y of each Jupiter moon
-    print(f"correction of position of Io in Jupiter radii (X, Y, Z): {io_corr_true[0] - io_corr_false[0]}"
-          f"{io_corr_true[1] - io_corr_false[1]}{io_corr_true[2] - io_corr_false[2]}")
+    print("Perspective distance of Io as seen from the Sun in Jupiter radii: ", io_radius_to_center_of_jupiter_sun)
+    #3.457757270630766
 
-    print(f"correction of position of Europe in Jupiter radii (X, Y, Z):{europe_corr_true[0] - europe_corr_false[0]}"
-          f"{europe_corr_true[1] - europe_corr_false[1]}{europe_corr_true[2] - europe_corr_false[2]}")
+    print("")
 
-    print(
-        f"correction of position of Ganymede in Jupiter radii (X, Y, Z):{ganimed_corr_true[0] - ganimed_corr_false[0]}"
-        f"{ganimed_corr_true[1] - ganimed_corr_false[1]}{ganimed_corr_true[2] - ganimed_corr_false[2]}")
+    # Calculation of the perspective distance ot the planet Io to the center of Jupiter
+    # for December 16 at 0h UTC as seen from the Sun
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=True)
+    io_radius_to_center_of_jupiter_earth = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
 
-    print(
-        f"correction of position of Callisto in Jupiter radii (X, Y, Z):{callisto_corr_true[0] - callisto_corr_false[0]}"
-        f"{callisto_corr_true[1] - callisto_corr_false[1]}{callisto_corr_true[2] - callisto_corr_false[2]}")
+    print("Perspective distance of Io as seen from the Earth in Jupiter radii: ", io_radius_to_center_of_jupiter_earth)
+    # 2.553301264153796
 
-    # TODO: add more functions to main()
-    gv_output = GraphvizOutput(output_file="C:\\Users\\micha\\Documents\\DHBW\\Studienarbeit\\"
-                                           "callgraph_old_version.png", font_size=18, group_font_size=22)
-    with PyCallGraph(gv_output):
-        JupiterMoons.is_phenomena(epoch)
+
+"""
+# Lets compute the result matrix for 1992 December 16 at 0h (Epoch in UTC: 1992, 12, 16)
+
+utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+
+result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
+io_radius_to_center_of_jupiter = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
+
+result_matrix = JupiterMoons.check_phenomena(utc_1992_12_16_00_00_00)
+
+print("structure of result matrix:")
+print("[[occultation of Io =True/False, eclipse of Io =  True/False, not applied]")
+print(" [occultation of Europe =True/False, eclipse of Europe =  True/False, not applied]")
+print(" [occultation of Ganymede =True/False, eclipse of Ganymede =  True/False, not applied]")
+print(" [occultation of Callisto =True/False, eclipse of Callisto =  True/False, not applied]]")
+
+print("resultmatrix :")
+print(result_matrix[0])
+print(result_matrix[1])
+print(result_matrix[2])
+print(result_matrix[3])
+print("\n")
+
+print("")
+
+# Lets now compute the result matrix for an eclipse of Io (Epoch in TT: 2021, 2, 12.5966898148148)
+io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
+result_matrix = JupiterMoons.check_phenomena(io_ecc_start_2021_02_12_14_19_14)
+print("resultmatrix :")
+print(result_matrix[0])
+print(result_matrix[1])
+print(result_matrix[2])
+
+print("")
+
+# Compute the corrected position of the Jupiter moons in Jupiter radii so take the effects of
+# differential light-time and the perspective effect described in Meeus page 313 -314 into account
+epoch = Epoch(2020, 11, 27)
+io_corr_true, europe_corr_true, ganimed_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(epoch,
+                                                                                                       do_correction=True)
+print(f"corrected positions of Io in Jupiter radii referred to Jupiter  (X, Y, Z): {io_corr_true}")
+print(f"corrected positions of Europe in Jupiter radii referred to Jupiter (X, Y, Z): {europe_corr_true}")
+print(f"corrected positions of Ganymede in Jupiter radii referred to Jupiter (X, Y, Z): {ganimed_corr_true}")
+print(f"corrected positions of Callisto in Jupiter radii referred to Jupiter (X, Y, Z): {callisto_corr_true}")
+
+print("")
+
+# Compute the uncorrected position of the Jupiter moons in Jupiter
+io_corr_false, europe_corr_false, ganimed_corr_false, callisto_corr_false = JupiterMoons.rectangular_positions(
+epoch, do_correction=False)
+print(f"uncorrected positions of Io in Jupiter radii referred to Jupiter (X, Y, Z): {io_corr_false}")
+print(f"uncorrected positions of Europe in Jupiter radii referred to Jupiter (X, Y, Z): {europe_corr_false}")
+print(f"uncorrected positions of Ganymede in Jupiter radii referred to Jupiter (X, Y, Z):  {ganimed_corr_false}")
+print(f" uncorrected positions of Callisto in Jupiter radii referred to Jupiter (X, Y, Z): {callisto_corr_false}")
+
+# Compute the correction of X and Y of each Jupiter moon
+print(f"correction of position of Io in Jupiter radii (X, Y, Z): {io_corr_true[0] - io_corr_false[0]}"
+  f"{io_corr_true[1] - io_corr_false[1]}{io_corr_true[2] - io_corr_false[2]}")
+
+print(f"correction of position of Europe in Jupiter radii (X, Y, Z):{europe_corr_true[0] - europe_corr_false[0]}"
+  f"{europe_corr_true[1] - europe_corr_false[1]}{europe_corr_true[2] - europe_corr_false[2]}")
+
+print(
+f"correction of position of Ganymede in Jupiter radii (X, Y, Z):{ganimed_corr_true[0] - ganimed_corr_false[0]}"
+f"{ganimed_corr_true[1] - ganimed_corr_false[1]}{ganimed_corr_true[2] - ganimed_corr_false[2]}")
+
+print(
+f"correction of position of Callisto in Jupiter radii (X, Y, Z):{callisto_corr_true[0] - callisto_corr_false[0]}"
+f"{callisto_corr_true[1] - callisto_corr_false[1]}{callisto_corr_true[2] - callisto_corr_false[2]}")
+
+# TODO: add more functions to main()
+"""
+
+gv_output = GraphvizOutput(output_file="C:\\Users\\micha\\Documents\\DHBW\\Studienarbeit\\"
+                                   "callgraph_old_version.png", font_size=18, group_font_size=22)
+with PyCallGraph(gv_output):
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    JupiterMoons.is_phenomena(utc_1992_12_16_00_00_00)
 
 if __name__ == "__main__":
     main()
