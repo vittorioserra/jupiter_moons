@@ -6,7 +6,7 @@ from math import floor
 
 from typing import List, Tuple
 
-from Calendar.PhenomenaDetection import Detection, Phenomenom, Result
+from PhenomenaDetection import Detection, Phenomenom, Result
 
 from pymeeus.Epoch import Epoch
 from pymeeus.JupiterMoons import JupiterMoons

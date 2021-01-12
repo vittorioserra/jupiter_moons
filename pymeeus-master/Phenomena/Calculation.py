@@ -15,7 +15,7 @@ print(phenomena_matrix)
 
 print(JupiterMoons.rectangular_positions(epoch))
 
-JupiterMoons.crossing_point(epoch, 3600)
+Phenomena.crossing_point_advanced_accuracy(epoch, 3600)
 
 for a in range(1, 3600):
 
