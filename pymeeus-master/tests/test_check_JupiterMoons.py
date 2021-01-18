@@ -137,7 +137,6 @@ def test_is_phenomena():
                 ["CA_OCC_END_2021_11_15_07_29_43", Epoch(2021, 11, 15.3123032407407), 3, 0],
                 ["CA_ECC_END_2021_08_24_00_58_49", Epoch(2021, 8, 24.0408449074074), 3, 1]
                 ]
-
     for test_label, epoch, row_idx, col_idx in test_set:
         result = JupiterMoons.is_phenomena(epoch)
         exp_event = False
