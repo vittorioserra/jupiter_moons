@@ -2,7 +2,7 @@
 
 
 # PyMeeus: Python module implementing astronomical algorithms.
-# Copyright (C) 2020  Michael Lutz, Sohie Scholz, Vittorio Serra, Sebastian Veigl
+# Copyright (C) 2020  Michael Lutz, Sophie Scholz, Vittorio Serra, Sebastian Veigl
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +30,7 @@ class JupiterMoons(object):
     With:
         1: Io
         2: Europa
-        3: Ganymed
+        3: Ganymede
         4: Callisto
     The algorithm used can be found in chapter 44 (high accuracy method) of Meeus'
     book Astronomic Algorithms
@@ -66,8 +66,9 @@ class JupiterMoons(object):
         y = 0.0
         z = 0.0
         tau = 0.0
+        iterations = 0
 
-        while DELTA != DELTA_old:
+        while DELTA != DELTA_old and iterations < 5:
             # Calculate light-time delay
             tau = 0.0057755183 * DELTA
 
@@ -79,6 +80,7 @@ class JupiterMoons(object):
 
             DELTA_old = DELTA
             DELTA = sqrt(x ** 2 + y ** 2 + z ** 2)
+            iterations += 1
 
         # Calculate Jupiter's geocentric longitude lambda_0 and latitute beta_0
         lambda_0 = atan2(y, x)
@@ -1077,8 +1079,9 @@ class JupiterMoons(object):
         z = 0.0
         tau = 0.0
         l, b, r = 0, 0, 0
+        iterations = 0
 
-        while DELTA != DELTA_old:
+        while DELTA != DELTA_old and iterations < 5:
             # Calculate light-time delay
             tau = 0.0057755183 * DELTA
 
@@ -1090,6 +1093,7 @@ class JupiterMoons(object):
 
             DELTA_old = DELTA
             DELTA = sqrt(x ** 2 + y ** 2 + z ** 2)
+            iterations += 1
 
         return DELTA, tau, l, b, r
 
