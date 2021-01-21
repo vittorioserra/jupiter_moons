@@ -20,7 +20,7 @@ class TestJupiterMoons(TestCase):
         assert abs(round(io_corr_true[1], exp_prec) - round(0.21370247, exp_prec)) < TOL, \
             """ERROR: 2nd rectangular position (Y) for Io of JupiterMoons.rectangular_position() test doesn't match"""
 
-        assert abs(round(io_corr_true[2], exp_prec) + round(-4.81896662, exp_prec)) < TOL, \
+        assert abs(round(io_corr_true[2], exp_prec) + round(4.81896662, exp_prec)) < TOL, \
             """ERROR: 3rd rectangular position (Z) for Io of JupiterMoons.rectangular_position() test doesn't match"""
 
         assert abs(round(europe_corr_true[0], exp_prec) - round(7.44186912, exp_prec)) < TOL, \
@@ -116,7 +116,7 @@ class TestJupiterMoons(TestCase):
         for December 16 at 0h UTC as seen from the Earth"""
         result_matrix = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, solar=False)
         io_radius_to_center_of_jupiter_earth = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
-        assert abs((io_radius_to_center_of_jupiter_earth, exp_prec) + round(3.457757270630766, exp_prec)) < TOL, \
+        assert abs(round(io_radius_to_center_of_jupiter_earth, exp_prec) - round(3.457757270630766, exp_prec)) < TOL, \
             """ERROR: test_check_coordinates() test doesn't match"""
 
 
@@ -126,7 +126,7 @@ class TestJupiterMoons(TestCase):
         result_matrix = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, solar=False)
         io_distance_to_center_of_jupiter_earthview = JupiterMoons.check_occultation(result_matrix[0][0],
                                                                                       result_matrix[0][1])
-        assert abs((io_distance_to_center_of_jupiter_earthview, exp_prec) - round(-3.457757270630766, exp_prec)) < TOL, \
+        assert abs(round(io_distance_to_center_of_jupiter_earthview, exp_prec) + round(3.457757270630766, exp_prec)) < TOL, \
             """ERROR: test_check_occultation() test doesn't match"""
 
 
@@ -134,7 +134,7 @@ class TestJupiterMoons(TestCase):
         result_matrix = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, solar=True)
         io_distance_to_center_of_jupiter_sunview = JupiterMoons.check_eclipse(result_matrix[0][0],
                                                                                  result_matrix[0][1])
-        assert abs((io_distance_to_center_of_jupiter_sunview, exp_prec) - round(-2.553301264153796, exp_prec)) < TOL, \
+        assert abs(round(io_distance_to_center_of_jupiter_sunview, exp_prec) + round(2.553301264153796, exp_prec)) < TOL, \
             """ERROR: test_check_eclipse() test doesn't match"""
 
 
@@ -148,8 +148,8 @@ class TestJupiterMoons(TestCase):
                                 [-7.44770945299594, -8.33419997337025, 0.0],
                                 [-1.3572840767173413, -3.817302564886177, 0.0],
                                 [-7.15735009488433, -11.373483813510918, 0.0]]
-        for row in 3:
-            for col in 2:
+        for row in range(3):
+            for col in range(2):
                 assert abs(
                     result_matrix[row][col] - result_matrix_expect[row][col]) < TOL, \
                     """ERROR: check_phenomena() test doesn't match"""
@@ -165,8 +165,8 @@ class TestJupiterMoons(TestCase):
                                 [False, False, False],
                                 [False, False, False],
                                 [False, False, False]]
-        for row in 3:
-            for col in 2:
+        for row in range(3):
+            for col in range(2):
                 assert abs(
                     result_matrix[row][col] - result_matrix_expect[row][col]) < TOL, \
                     """ERROR: is_phenomena() test one doesn't match"""
@@ -176,8 +176,8 @@ class TestJupiterMoons(TestCase):
         result_matrix = JupiterMoons.is_phenomena(io_ecc_start_2021_02_12_14_19_14)
         result_matrix_expect[0][1] = True
 
-        for row in 3:
-            for col in 2:
+        for row in range(3):
+            for col in range(2):
                 assert abs(
                     result_matrix[row][col] - result_matrix_expect[row][col]) < TOL, \
                     """ERROR: is_phenomena() test two doesn't match"""
@@ -206,13 +206,13 @@ class TestJupiterMoons(TestCase):
                     ["CA_ECC_END_2021_08_24_00_58_49", Epoch(2021, 8, 24.0408449074074), 3, 1]
                     ]
 
-        for test_label in 16:
-            result = JupiterMoons.is_phenomena(test_set[test_label - 1][1])
-            for column in 2:
-                for row in 4:
-                    if column == test_set[test_label - 1][3] and row == test_set[test_label - 1][2]:
-                        assert result[test_label[test_label - 1][2]][test_label[test_label - 1][3]] == True, \
+        for test_label in range(15):
+            result = JupiterMoons.is_phenomena(test_set[test_label][1])
+            for column in range(1):
+                for row in range(3):
+                    if column == test_set[test_label][3] and row == test_set[test_label][2]:
+                        assert result[test_set[test_label][2]][test_set[test_label][3]] == True, \
                             """ERROR: existing phenomena is not detected """
                     else:
-                        assert result[row - 1][column - 1] == False, \
+                        assert result[row][column] == False, \
                             """ERROR: non existing phenomena is detected"""
