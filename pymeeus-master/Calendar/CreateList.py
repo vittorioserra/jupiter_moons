@@ -1,6 +1,6 @@
 from typing import TextIO, List, Any
 
-from Calculation import Calculation
+from Calendar.Calculation import Calculation
 from pymeeus.Epoch import Epoch
 
 
@@ -177,7 +177,7 @@ class CreateList(object):
 
         x = len(calc.all_timings_sorted)
         for pos in range(0, x):
-            epoch = calc.all_timings_sorted[pos].phenomenom.epoch
+            epoch = calc.all_timings_sorted[pos].epoch
             year, month, day = epoch.get_date()
             row = calc.all_timings_sorted[pos].row
             type1 = calc.all_timings_sorted[pos].phenomenom.phenomenom_type

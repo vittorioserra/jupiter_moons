@@ -878,10 +878,15 @@ class Calculation:
 
 if __name__ == "__main__":
     epoch_start = Epoch()
-    epoch_start.set(2020, 1, 1, 0)
+    # epoch_start.set(2020, 6, 19, 0)
+    #
+    # epoch_stop = Epoch()
+    # epoch_stop.set(2020, 6, 20, 0)
+
+    epoch_start.set(2020, 6, 20, 0)
 
     epoch_stop = Epoch()
-    epoch_stop.set(2020, 2, 1, 0)
+    epoch_stop.set(2020, 6, 21, 0)
 
     calc_time_step = 60 * 120 * 1.157401129603386e-05
 

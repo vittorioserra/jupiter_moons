@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 import copy
 
+
 class ParseEvent(object):
 
     def __init__(self, file: str, origin: str):
@@ -13,7 +14,7 @@ class ParseEvent(object):
         self.state = 'searchYear'
 
         # define 300x18 list
-        self.cleanTable = [[0, 0, 0, 0, 0, '',   0, 0, 0, 0, 0, '',   0, 0, 0, 0, 0, ''] for i in range(300)]
+        self.cleanTable = [[0, 0, 0, 0, 0, '', 0, 0, 0, 0, 0, '', 0, 0, 0, 0, 0, ''] for i in range(300)]
         self.table = copy.deepcopy(self.cleanTable)
 
         # current Date and Time
@@ -22,7 +23,7 @@ class ParseEvent(object):
         # SQL database
         self.database = "Event.sqlite"
 
-        #open SQL database
+        # open SQL database
         self.conn = sqlite3.connect(self.database)
         self.cursor = self.conn.cursor()
 
@@ -33,17 +34,17 @@ class ParseEvent(object):
         self.conn.commit()
         self.conn.close()
 
-
     def writeTable(self, rowTotal: int):
 
         for column in range(3):
             for row in range(rowTotal):
-                elements = self.table[row][6 * column:6 * (column+1)]
+                elements = self.table[row][6 * column:6 * (column + 1)]
 
                 if elements[4] > 0:
                     # row contains event data for a satellite
 
-                    date = datetime(self.year, self.month, elements[0], elements[1], elements[2], elements[3]).strftime('%Y-%m-%d %H:%M:%S')
+                    date = datetime(self.year, self.month, elements[0], elements[1], elements[2], elements[3]).strftime(
+                        '%Y-%m-%d %H:%M:%S')
                     types = elements[5].split('.')
 
                     add = ("INSERT INTO Event "
@@ -51,7 +52,6 @@ class ParseEvent(object):
                            "VALUES (?, ?, ?, ?, ?, ?, ?)")
                     data = (date, elements[4], types[0], types[1], types[2], self.origin, self.dateTimeAdded)
                     self.cursor.execute(add, data)
-
 
     def monthNo(self, monthText: str):
         monthList = {
@@ -107,7 +107,7 @@ class ParseEvent(object):
         # do from bottom to top to work with fixed rows, as always row above is fixed based on row below
         # start with row that has three columns, i.e. nothing has to be moved, i.e. infos are in correct column
         if self.multicolumn:
-            for row in range(rowTotal-1, 0, -1):
+            for row in range(rowTotal - 1, 0, -1):
                 # find bottom row that has three columns, i.e. nothing has to be moved, i.e. infos are in correct column
                 if self.table[row][16] > 0:
                     bottomThreeColumnRow = row
@@ -147,7 +147,6 @@ class ParseEvent(object):
                 self.table[rowTotal - 1][2 * 6:3 * 6] = self.table[rowTotal - 1][1 * 6:2 * 6]
                 self.table[rowTotal - 1][1 * 6:2 * 6] = [0, 0, 0, 0, 0, '']
 
-
         # detect empty rows in individual columns, if the file is of multi column type
         # do from bottom to top to work with fixed rows, as always row above is fixed based on row below
         # do "rest", i.e. from bottom up to row with three columns where we started before
@@ -169,13 +168,11 @@ class ParseEvent(object):
                     self.table[row - 1][2 * 6:3 * 6] = self.table[row - 1][1 * 6:2 * 6]
                     self.table[row - 1][1 * 6:2 * 6] = [0, 0, 0, 0, 0, '']
 
-
         # transfer day from previous page if needed
         if self.table[0][0] == 0:
             self.table[0][0] = self.dayFoundLastPage
         # save self.dayFound from this page for usage in next page
         self.dayFoundLastPage = self.dayFound
-
 
         # in first column: transfer day from row above if zero
         column = 1
@@ -203,7 +200,6 @@ class ParseEvent(object):
             for row in range(1, rowTotal):
                 if self.table[row][6 * (column - 1)] == 0:
                     self.table[row][6 * (column - 1)] = self.table[row - 1][6 * (column - 1)]
-
 
     def parse(self):
 
@@ -302,8 +298,6 @@ class ParseEvent(object):
             # fix and write last table
             self.fixTable(row)
             self.writeTable(row)
-
-
 
 
 if __name__ == "__main__":

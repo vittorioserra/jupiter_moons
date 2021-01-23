@@ -298,8 +298,6 @@ class Detection:
             # Calc perspective distance to Jupiter for given satellite
             distance = Detection.perspective_distance(Coords[i_sat][0], Coords[i_sat][1])
             # Calc shadow cone parameter
-            #r_penumbra = Detection.cone_radius(epoch, Coords[i_sat][2])
-            #r_umbra = Detection.cone_radius_high_accuracy_umbra(epoch, Coords[i_sat][2])
             r_umbra, r_penumbra = Detection.cone_radius(epoch, Coords[i_sat][2])
 
             # Return Phenomena instance
@@ -356,8 +354,6 @@ class Detection:
                     # Calc perspective distance to Jupiter
                     distance = Detection.perspective_distance(Coords_Sun[i_sat][0], Coords_Sun[i_sat][1])
                     # Calc shadow cone parameter
-                    #r_umbra = Detection.cone_radius_high_accuracy_umbra(epoch, Coords_Sun[i_sat][2])
-                    #r_penumbra = Detection.cone_radius(epoch, Coords_Sun[i_sat][2]) # r_umbra
                     r_umbra, r_penumbra = Detection.cone_radius(epoch, Coords_Sun[i_sat][2])
 
                     # Fill result matrix with Phenomena instance
@@ -432,7 +428,7 @@ class Detection:
         return r_umbra, r_penumbra
 
     @staticmethod
-    def round_base_cone_param(epoch: Epoch, ellipsoid: bool = True):
+    def round_base_cone_param(epoch: Epoch, ellipsoid: bool = True) -> tuple:
         """This method constructs a cone modelling jupiter's shadow
 
         :param epoch: Epoch that should be checked
@@ -496,8 +492,7 @@ class Detection:
 
 
 if __name__ == "__main__":
-    test_epoch = Epoch()
-    test_epoch.set(2020, 1, 2, 12, 36, 0)
+    test_epoch = Epoch(2458930.6661776793) + 1.157401129603386e-05 * 2
 
     res = Detection.check_phenomena(test_epoch)
 

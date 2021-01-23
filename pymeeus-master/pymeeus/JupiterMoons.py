@@ -1010,23 +1010,23 @@ class JupiterMoons(object):
         # Inclination of Jupiter's orbit with respect to the orbital plane
         I = 3.120262 + 0.0006 * time_JC_1900
 
-        # Rotate thowards Jupiter's orbital plane
+        # Rotate towards Jupiter's orbital plane
         A_1 = X
         B_1 = Y * cos(radians(I)) - Z * sin(radians(I))
         C_1 = Y * sin(radians(I)) + Z * cos(radians(I))
 
-        # Rotate thowards the ascending node of Jupiter's orbit
+        # Rotate towards the ascending node of Jupiter's orbit
         PHI = psi - OMEGA
         A_2 = A_1 * cos(radians(PHI)) - B_1 * sin(radians(PHI))
         B_2 = A_1 * sin(radians(PHI)) + B_1 * cos(radians(PHI))
         C_2 = C_1
 
-        # Rotate thowards the plane of the ecliptic
+        # Rotate towards the plane of the ecliptic
         A_3 = A_2
         B_3 = B_2 * cos(radians(i)) - C_2 * sin(radians(i))
         C_3 = B_2 * sin(radians(i)) + C_2 * cos(radians(i))
 
-        # Rotate thowards the vernal equinox
+        # Rotate towards the vernal equinox
         A_4 = A_3 * cos(radians(OMEGA)) - B_3 * sin(radians(OMEGA))
         B_4 = A_3 * sin(radians(OMEGA)) + B_3 * cos(radians(OMEGA))
         C_4 = C_3
