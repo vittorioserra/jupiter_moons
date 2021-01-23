@@ -878,12 +878,13 @@ class Calculation:
 
 if __name__ == "__main__":
     epoch_start = Epoch()
+    # TODO find bug for the following paramters
     # epoch_start.set(2020, 6, 19, 0)
     #
     # epoch_stop = Epoch()
     # epoch_stop.set(2020, 6, 20, 0)
 
-    epoch_start.set(2020, 6, 20, 0)
+    epoch_start.set(2020, 6, 18, 0)
 
     epoch_stop = Epoch()
     epoch_stop.set(2020, 6, 21, 0)
