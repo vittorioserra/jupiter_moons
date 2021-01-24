@@ -16,22 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import logging
-import sys
-import time
 from math import sin, cos, sqrt, atan, atan2, radians
 
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput
 
 from pymeeus.Epoch import Epoch
 from pymeeus.Jupiter import Jupiter
 from pymeeus.Sun import Sun
-
-_logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                    format="[%(asctime)s] %(levelname)s:%(name)s:%(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-
 
 class JupiterMoons(object):
     """
@@ -312,10 +302,6 @@ class JupiterMoons(object):
         sum4 -= 0.00018 * sin(radians(l_4 - pi_4 + G))
         sum4 -= 0.00016 * sin(radians(l_4 + pi_3 - 2 * PI - 2 * G))
 
-        _logger.debug("sum1: {sum1}")
-        _logger.debug("sum2: {sum2}")
-        _logger.debug("sum3: {sum3}")
-        _logger.debug("sum4: {sum4}")
 
         # True longitudes of the satellites
         L1 = l_1 + sum1
@@ -1128,11 +1114,3 @@ def main():
     # 2.553301264153796
 
 
-gv_output = GraphvizOutput(output_file="C:\\Users\\micha\\Documents\\DHBW\\"
-                                       "Studienarbeit\\callgraph_old_version.png", font_size=18, group_font_size=22)
-with PyCallGraph(gv_output):
-    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
-    resultmatrix = JupiterMoons.is_phenomena(utc_1992_12_16_00_00_00)
-
-if __name__ == "__main__":
-    main()
