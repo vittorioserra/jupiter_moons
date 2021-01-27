@@ -13,6 +13,7 @@ class TestJupiterMoons(TestCase):
          position of Jupiter's satellites for a given epoch, using the E5-theory. """
 
         io_corr_true, europe_corr_true, ganymede_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, do_correction=True)
+        # io_corr_true, europe_corr_true, ganymede_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions_jovian_equatorial(EPOCH_1992_12_16_UTC)
 
         assert abs(round(io_corr_true[0], exp_prec) - round(-3.45016881, exp_prec)) < TOL, \
             """ERROR: 1st rectangular position (X) for Io of JupiterMoons.rectangular_position() test doesn't match"""
@@ -47,15 +48,15 @@ class TestJupiterMoons(TestCase):
             """ERROR: 3rd rectangular position (Z) for Ganymede of JupiterMoons.rectangular_position()
             test doesn't match"""
 
-        assert abs(round(callisto_corr_true[0], exp_prec) - round(7.07194324, exp_prec)) < TOL, \
-            """ERROR: 1st rectangular position (X) for Callisto of JupiterMoons.rectangular_position() 
+        assert abs(round(callisto_corr_true[0], exp_prec) - round(7.07202264, exp_prec)) < TOL, \
+            """ERROR: 1st rectangular position (X) for Callisto of JupiterMoons.rectangular_position()
             test doesn't match"""
 
         assert abs(round(callisto_corr_true[1], exp_prec) - round(1.02895629, exp_prec)) < TOL, \
             """ERROR: 2nd rectangular position (Y) for  Callisto of JupiterMoons.rectangular_position()
             test doesn't match"""
 
-        assert abs(round(callisto_corr_true[2], exp_prec) - round(-25.22413772, exp_prec)) < TOL, \
+        assert abs(round(callisto_corr_true[2], exp_prec) - round(-25.22442033, exp_prec)) < TOL, \
             """ERROR: 3rd rectangular position (Z) for  Callisto of JupiterMoons.rectangular_position()
             test doesn't match"""
 
@@ -66,7 +67,7 @@ class TestJupiterMoons(TestCase):
         """Epoch used for the calculations"""
         epoch = Epoch(1992, 12, 16, utc=True)
 
-        delta, tau = JupiterMoons.calculate_DELTA(epoch)
+        delta, tau, l, b, r = JupiterMoons.calculate_DELTA(epoch)
 
         # value_reference
         delta_reference: float = 5.6611211815432645

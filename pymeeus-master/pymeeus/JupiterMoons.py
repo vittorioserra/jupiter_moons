@@ -145,7 +145,7 @@ class JupiterMoons(object):
         >>> print(ganymede)
         (1.201111684800708, 0.5899903274317162, -14.940581367576527)
         >>> print(callisto)
-        (7.071943240286434, 1.0289562923230684, -25.224137724734955)
+        (7.072022641384802, 1.0289678450543338, -25.224420329457175)
         """
 
         # Calculate solar coordinates
@@ -1105,7 +1105,7 @@ class JupiterMoons(object):
         :raises: TypeError if input values are wrong type
 
         >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
-        >>> delta, tau = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
+        >>> delta, tau, l, b, r = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
         >>> print(delta)
         5.6611211815432645
         >>> print(tau)
@@ -1233,7 +1233,7 @@ class JupiterMoons(object):
         >>> print(result_matrix[2])
         [-1.3572840767173413, -3.817302564886177, 0.0]
         >>> print(result_matrix[3])
-        [-7.15735009488433, -11.373483813510918, 0.0]
+        [-7.157430454898491, -11.373611474420906, 0.0]
 
         >>> io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
         >>> result_matrix = JupiterMoons.check_phenomena(io_ecc_start_2021_02_12_14_19_14)
@@ -1244,7 +1244,7 @@ class JupiterMoons(object):
         >>> print(result_matrix[2])
         [14.069121992481382, 13.8323491767871, 0.0]
         >>> print(result_matrix[3])
-        [-2.934134686233644, -3.9904786452498144, 0.0]
+        [-2.9341209155813894, -3.990459815299838, 0.0]
         """
 
         # Check input type
@@ -1519,7 +1519,7 @@ def main():
 
     # Lets calculate the distance between Earth and Jupiter (DELTA) for a given epoch.
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
-    delta, tau = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
+    delta, tau, l, b, r = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
 
     print("Distance between Earth and Jupiter in AU: ", delta)
     # 5.6611211815432645
@@ -1615,3 +1615,6 @@ def main():
     # 2.553301264153796
 
 
+if __name__ == "__main__":
+
+    main()

@@ -46,16 +46,18 @@ using the E5-theory::
 
     print("Uncorrected rectangular geocentric position of Callisto [X, Y , Z]: ", callisto_uncorrected)
     # (7.056237832405445, 1.0267678919629089, -25.224137724734955)
+
 Lets calculate the distance between Earth and Jupiter (DELTA) for a given epoch::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
-    delta, tau = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
+    delta, tau, l, b, r = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
 
     print("Distance between Earth and Jupiter in AU: ", delta)
     #5.6611211815432645
 
     print("Light-time from Earth to Jupiter in d (day): ", tau)
     #0.03269590898252075
+
 Lets calculate the perspective distance in Jupiter radii of all satellites
 for an eclipse of Io::
 
@@ -88,6 +90,7 @@ for an eclipse of Io::
     print("(perspective distance of Callisto (Earth View), perspective distance of Callisto (Sun view), No use): ")
     print(result_matrix[3])
     #[-2.934134686233644, -3.9904786452498144, 0.0]
+
 Lets check if an eclipse or\and occultation for any of the four Galilean satellites is detected for a given epoch::
 
     io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
