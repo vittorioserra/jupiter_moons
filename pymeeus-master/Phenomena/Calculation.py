@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from pymeeus.Epoch import Epoch
-from pymeeus.JupiterMoons import JupiterMoons
+from ..pymeeus.JupiterMoons import JupiterMoons
 
 epoch = Epoch()
 epoch.set(2020, 1, 2, 12, 0, 0, utc = True) # this should be in terrestrial time, not utc

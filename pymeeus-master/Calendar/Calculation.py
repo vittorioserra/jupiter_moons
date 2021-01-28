@@ -9,7 +9,7 @@ from typing import List, Tuple
 from Calendar.PhenomenaDetection import Detection, Phenomenom, Result
 
 from pymeeus.Epoch import Epoch
-from pymeeus.JupiterMoons import JupiterMoons
+from ..pymeeus.JupiterMoons import JupiterMoons
 
 # 1 second in jd = 1.157401129603386e-05
 s_jd = 1.157401129603386e-05
