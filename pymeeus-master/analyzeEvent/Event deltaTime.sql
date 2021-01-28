@@ -20,6 +20,7 @@ FROM Event
 WHERE Origin="Thuillot"
 )
 
+
 /* pro PyMeeus Event aus jeweils allen identischen Thuillot Event-Typen den mit der kleinsten absoluten zeitlichen
    Abweichung auswählen und pro PyMeeus Event zeitliche Abweichung zum korrespondieren Thuillot Event anzeigen */
 SELECT p.DateTimeEventTT, p.Satellite, p.Type1, p.Type2, p.Type3, 
