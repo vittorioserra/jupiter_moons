@@ -8,12 +8,23 @@ EPOCH_1992_12_16_UTC = Epoch(1992, 12, 16, utc=True)
 exp_prec: int = 4
 
 class TestJupiterMoons(TestCase):
+
+    def test_jupiter_system_angles(self):
+        """This method tests the method jupiter_system_angles() that calculates
+         the ascending node of Jupiter as well as psi. """
+        utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        psi_corrected, OMEGA_ascending_node_jupiter = JupiterMoons.jupiter_system_angles(utc_1992_12_16_00_00_00)
+        assert abs(round(psi_corrected, exp_prec) - round(317.1058009213959, exp_prec)) < TOL, \
+            """ERROR: psi_corrected of JupiterMoons.jupiter_system angles() test doesn't match"""
+        assert abs(round(OMEGA_ascending_node_jupiter, exp_prec) - round(100.39249942976576, exp_prec)) < TOL, \
+            """ERROR: OMEGA_ascending_node_jupiter of JupiterMoons.jupiter_system angles() test doesn't match"""
+
     def test_rectangular_positions(self):
-        """This method tests the method rectangular_positions() that calculates the rectangular geocentric
+        """This method tests the method rectangular_positions_jovian_equatorial() that calculates the rectangular geocentric
          position of Jupiter's satellites for a given epoch, using the E5-theory. """
 
-        io_corr_true, europe_corr_true, ganymede_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, do_correction=True)
-        # io_corr_true, europe_corr_true, ganymede_corr_true, callisto_corr_true = JupiterMoons.rectangular_positions_jovian_equatorial(EPOCH_1992_12_16_UTC)
+        io_corr_true, europe_corr_true, ganymede_corr_true, callisto_corr_true = \
+        JupiterMoons.rectangular_positions_jovian_equatorial(EPOCH_1992_12_16_UTC, do_correction=True)
 
         assert abs(round(io_corr_true[0], exp_prec) - round(-3.45016881, exp_prec)) < TOL, \
             """ERROR: 1st rectangular position (X) for Io of JupiterMoons.rectangular_position() test doesn't match"""
@@ -115,7 +126,7 @@ class TestJupiterMoons(TestCase):
 
         """Calculation of the perspective distance of the planet Io to the center of Jupiter
         for December 16 at 0h UTC as seen from the Earth"""
-        result_matrix = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, solar=False)
+        result_matrix = JupiterMoons.rectangular_positions_jovian_equatorial(EPOCH_1992_12_16_UTC, solar=False)
         io_radius_to_center_of_jupiter_earth = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
         assert abs(round(io_radius_to_center_of_jupiter_earth, exp_prec) - round(3.457757270630766, exp_prec)) < TOL, \
             """ERROR: test_check_coordinates() test doesn't match"""
@@ -124,7 +135,7 @@ class TestJupiterMoons(TestCase):
     def test_check_occulation(self):
         """This method test if the method check_occultation() returns the right distance between Io and Jupiter
          as seen from the earth."""
-        result_matrix = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, solar=False)
+        result_matrix = JupiterMoons.rectangular_positions_jovian_equatorial(EPOCH_1992_12_16_UTC, solar=False)
         io_distance_to_center_of_jupiter_earthview = JupiterMoons.check_occultation(result_matrix[0][0],
                                                                                       result_matrix[0][1])
         assert abs(round(io_distance_to_center_of_jupiter_earthview, exp_prec) + round(3.457757270630766, exp_prec)) < TOL, \
@@ -132,7 +143,7 @@ class TestJupiterMoons(TestCase):
 
 
     def test_check_eclipse(self):
-        result_matrix = JupiterMoons.rectangular_positions(EPOCH_1992_12_16_UTC, solar=True)
+        result_matrix = JupiterMoons.rectangular_positions_jovian_equatorial(EPOCH_1992_12_16_UTC, solar=True)
         io_distance_to_center_of_jupiter_sunview = JupiterMoons.check_eclipse(result_matrix[0][0],
                                                                                  result_matrix[0][1])
         assert abs(round(io_distance_to_center_of_jupiter_sunview, exp_prec) + round(2.553301264153796, exp_prec)) < TOL, \
@@ -182,6 +193,8 @@ class TestJupiterMoons(TestCase):
                 assert abs(
                     result_matrix[row][col] - result_matrix_expect[row][col]) < TOL, \
                     """ERROR: is_phenomena() test two doesn't match"""
+
+
 
         """ Unit test weather the software detects the right phenomea or not
             Matrix:
