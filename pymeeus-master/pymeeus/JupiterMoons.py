@@ -16,13 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from math import sin, cos, sqrt, atan, atan2, radians
 
-from math import sin, cos, sqrt, tan, atan, atan2, radians, degrees, pi
 
 from pymeeus.Epoch import Epoch
-from pymeeus.Sun import Sun
 from pymeeus.Jupiter import Jupiter
-
+from pymeeus.Sun import Sun
 
 class JupiterMoons(object):
     """
@@ -113,10 +112,11 @@ class JupiterMoons(object):
         return psi_corrected, OMEGA_ascending_node_jupiter
 
     @staticmethod
-    def rectangular_positions(epoch, tofk5=True, solar=False):
+    def rectangular_positions(epoch, tofk5=True, solar=False, do_correction: bool = True):
         """This method computes the rectangular geocentric position of Jupiter's
         satellites for a given epoch, using the E5-theory.
 
+        :param do_correction: bool indicating whether or not to apply the correction
         :param epoch: Epoch to compute satellites' positions, as an Epoch object
         :type epoch: :py:class:`Epoch`
         :param tofk5: Whether or not the small correction to convert to the FK5
@@ -126,12 +126,28 @@ class JupiterMoons(object):
             Earth (False) or the Sun (True)
         :type solar: bool
 
+        :param do_correction: Whether the satellites' positions is corrected for the effect of differetn light-time
+         and perspective effect or nit
+        :type do_correction: bool
+
         :returns: Four tuple with the rectangular X, Y and Z coordinates in
             Jupiter radii (float), where Z is positive if the satellite is more
             distant than Jupiter.
         :rtype: tuple
         :raises: TypeError if input values are of wrong type.
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> io, europa, ganymede, callisto = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00)
+        >>> print(io)
+        (-3.450168811390241, 0.21370246960509387, -4.818966623735296)
+        >>> print(europa)
+        (7.441869121153001, 0.27524463479625677, -5.747104399729193)
+        >>> print(ganymede)
+        (1.201111684800708, 0.5899903274317162, -14.940581367576527)
+        >>> print(callisto)
+        (7.072022641384802, 1.0289678450543338, -25.224420329457175)
         """
+
         # Calculate solar coordinates
         O, beta, R = Sun.geometric_geocentric_position(epoch, tofk5)
 
@@ -204,23 +220,23 @@ class JupiterMoons(object):
         sum1 = 0
         sum1 += 0.47259 * sin(2 * radians(l_1 - l_2))
         sum1 -= 0.03478 * sin(radians(pi_3 - pi_4))
-        sum1 += 0.01081 * sin(radians(l_2 - 2 * l_3 + pi_3))
+        sum1 += 0.01081 * sin(radians(l_2 - 2.0 * l_3 + pi_3))
         sum1 += 0.00738 * sin(radians(PHI_lambda))
-        sum1 += 0.00713 * sin(radians(l_2 - 2 * l_3 + pi_2))
-        sum1 -= 0.00674 * sin(radians(pi_1 + pi_3 - 2 * PI - 2 * G))
-        sum1 += 0.00666 * sin(radians(l_2 - 2 * l_3 + pi_4))
+        sum1 += 0.00713 * sin(radians(l_2 - 2.0 * l_3 + pi_2))
+        sum1 -= 0.00674 * sin(radians(pi_1 + pi_3 - 2.0 * PI - 2.0 * G))
+        sum1 += 0.00666 * sin(radians(l_2 - 2.0 * l_3 + pi_4))
         sum1 += 0.00445 * sin(radians(l_1 - pi_3))
         sum1 -= 0.00354 * sin(radians(l_1 - l_2))
-        sum1 -= 0.00317 * sin(radians(2 * psi - 2 * PI))
+        sum1 -= 0.00317 * sin(radians(2.0 * psi - 2.0 * PI))
         sum1 += 0.00265 * sin(radians(l_1 - pi_4))
         sum1 -= 0.00186 * sin(radians(G))
         sum1 += 0.00162 * sin(radians(pi_2 - pi_3))
-        sum1 += 0.00158 * sin(radians(4 * (l_1 - l_2)))
+        sum1 += 0.00158 * sin(radians(4.0 * (l_1 - l_2)))
         sum1 -= 0.00155 * sin(radians(l_1 - l_3))
-        sum1 -= 0.00138 * sin(radians(psi + omega_3 - 2 * PI - 2 * G))
-        sum1 -= 0.00115 * sin(radians(2 * (l_1 - 2 * l_2 + omega_2)))
+        sum1 -= 0.00138 * sin(radians(psi + omega_3 - 2.0 * PI - 2.0 * G))
+        sum1 -= 0.00115 * sin(radians(2.0 * (l_1 - 2.0 * l_2 + omega_2)))
         sum1 += 0.00089 * sin(radians(pi_2 - pi_4))
-        sum1 += 0.00085 * sin(radians(l_1 + pi_3 - 2 * PI - 2 * G))
+        sum1 += 0.00085 * sin(radians(l_1 + pi_3 - 2.0 * PI - 2.0 * G))
         sum1 += 0.00083 * sin(radians(omega_2 - omega_3))
         sum1 += 0.00053 * sin(radians(psi - omega_2))
 
@@ -359,6 +375,7 @@ class JupiterMoons(object):
         sum4 -= 0.00019 * sin(radians(2 * l_4 - pi_3 - pi_4))
         sum4 -= 0.00018 * sin(radians(l_4 - pi_4 + G))
         sum4 -= 0.00016 * sin(radians(l_4 + pi_3 - 2 * PI - 2 * G))
+
 
         # True longitudes of the satellites
         L1 = l_1 + sum1
@@ -532,11 +549,12 @@ class JupiterMoons(object):
         Callisto = JupiterMoons.apparent_rectangular_coordinates(epoch, X_4, Y_4, Z_4, OMEGA_ascending_node_jupiter,
                                                                  psi_corrected, i_ecliptic_jupiter, lambda_0, beta_0, D)
 
-        # Calculate corrected coordinates
-        Io = JupiterMoons.correct_rectangular_positions(R_1, 1, DELTA, Io)
-        Europa = JupiterMoons.correct_rectangular_positions(R_2, 2, DELTA, Europa)
-        Ganimed = JupiterMoons.correct_rectangular_positions(R_3, 3, DELTA, Ganimed)
-        Callisto = JupiterMoons.correct_rectangular_positions(R_4, 4, DELTA, Callisto)
+        if do_correction:
+            # Calculate corrected coordinates
+            Io = JupiterMoons.correct_rectangular_positions(R_1, 1, DELTA, Io)
+            Europa = JupiterMoons.correct_rectangular_positions(R_2, 2, DELTA, Europa)
+            Ganimed = JupiterMoons.correct_rectangular_positions(R_3, 3, DELTA, Ganimed)
+            Callisto = JupiterMoons.correct_rectangular_positions(R_4, 4, DELTA, Callisto)
 
         return Io, Europa, Ganimed, Callisto
 
@@ -998,6 +1016,25 @@ class JupiterMoons(object):
             satellite or parameter D if isFictional=True
         :rtype: tuple, float
         :raises: TypeError if input values are wrong type
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> psi_corrected = 317.1058009213959
+        >>> i_ecliptic_jupiter = 1.3036541530886598
+        >>> lambda_0 = -2.9355662143229146
+        >>> beta_0 = 0.021667777174910842
+        >>> OMEGA_ascending_node_jupiter= 100.39249942976576
+        >>> X_1 =  5.60361395790844
+        >>> Y_1 = 1.9398758261880644
+        >>> Z_1 = 0.00449258104769796
+        >>> X_5 =  0
+        >>> Y_5 = 0
+        >>> Z_5 = 1
+        >>> d = JupiterMoons.apparent_rectangular_coordinates(utc_1992_12_16_00_00_00, X_5, Y_5, Z_5, OMEGA_ascending_node_jupiter, psi_corrected, i_ecliptic_jupiter, lambda_0, beta_0, isFictional=True)
+        >>> print(d)
+        -0.03205624694284398
+        >>> io = JupiterMoons.apparent_rectangular_coordinates(utc_1992_12_16_00_00_00, X_1, Y_1, Z_1, OMEGA_ascending_node_jupiter, psi_corrected, i_ecliptic_jupiter, lambda_0, beta_0, d)
+        >>> print(io)
+        (-3.4489935969836503, 0.21361563816963675, -4.818966623735296)
         """
 
         # Checking for type
@@ -1066,6 +1103,13 @@ class JupiterMoons(object):
         :rtype: tuple
 
         :raises: TypeError if input values are wrong type
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> delta, tau, l, b, r = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
+        >>> print(delta)
+        5.6611211815432645
+        >>> print(tau)
+        0.03269590898252075
         """
 
         # Calculate solar coordinates
@@ -1121,8 +1165,19 @@ class JupiterMoons(object):
             of the satellite in Jupiter's radii
         :rtype: tuple
         :raises: TypeError if input values are wrong type
-        """
 
+        Calculate corrected rectangular Coordinates X, Y and Z in Jupiter's radii for Io (1)
+
+        >>> R = 5.929892730360271
+        >>> i_sat = 1
+        >>> DELTA = 5.6611211815432645
+        >>> X_coordinate = -3.4489935969836503
+        >>> Y_coordinate = 0.21361563816963675
+        >>> Z_coordinate = -4.818966623735296
+        >>> io = JupiterMoons.correct_rectangular_positions(R, i_sat, DELTA, X_coordinate, Y_coordinate, Z_coordinate)
+        >>> print(io)
+        (-3.450168811390241, 0.21370246960509387, -4.818966623735296)
+        """
         # Check type
         if not isinstance(i_sat, int):
             raise TypeError("Invalid input types")
@@ -1168,6 +1223,28 @@ class JupiterMoons(object):
         :rtype: tuple
 
         :raises: TypeError if input values are wrong type
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> result_matrix = JupiterMoons.check_phenomena(utc_1992_12_16_00_00_00)
+        >>> print(result_matrix[0])
+        [-3.457757270630766, -2.553301264153796, 0.0]
+        >>> print(result_matrix[1])
+        [-7.44770945299594, -8.33419997337025, 0.0]
+        >>> print(result_matrix[2])
+        [-1.3572840767173413, -3.817302564886177, 0.0]
+        >>> print(result_matrix[3])
+        [-7.157430454898491, -11.373611474420906, 0.0]
+
+        >>> io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
+        >>> result_matrix = JupiterMoons.check_phenomena(io_ecc_start_2021_02_12_14_19_14)
+        >>> print(result_matrix[0])
+        [1.1926058680144362, 0.856027716233023, 0.0]
+        >>> print(result_matrix[1])
+        [-8.739720236890856, -8.893094092124032, 0.0]
+        >>> print(result_matrix[2])
+        [14.069121992481382, 13.8323491767871, 0.0]
+        >>> print(result_matrix[3])
+        [-2.9341209155813894, -3.990459815299838, 0.0]
         """
 
         # Check input type
@@ -1180,14 +1257,13 @@ class JupiterMoons(object):
         # Calculate coordinates as seen from the Earth
         Coords_Earth = JupiterMoons.rectangular_positions(epoch)
         # Calculate coordinates as seen from the Sun
-        # TODO: tbd: delay by tau because of later observations from the Earth
         Coords_Sun = JupiterMoons.rectangular_positions(epoch, solar=True)
 
         if check_all is True:
             # Result matrix, where each rows is for a satellite
             # Column 0: Occultation
             # Column 1: Eclipse
-            # TODO Column 2: Penumbra
+            # Column 2: No use
             result_matrix = [[0.0, 0.0, 0.0],
                              [0.0, 0.0, 0.0],
                              [0.0, 0.0, 0.0],
@@ -1204,14 +1280,14 @@ class JupiterMoons(object):
                 Z_0 = Coords_Sun[i][2]
 
                 # Check occultation
-                result_matrix[i][0] = JupiterMoons.check_occulation(X, Y, Z)
+                result_matrix[i][0] = JupiterMoons.check_occultation(X, Y, Z)
                 # Check eclipse
                 result_matrix[i][1] = JupiterMoons.check_eclipse(X_0, Y_0, Z_0)
 
             return result_matrix
         else:
-            return JupiterMoons.check_occulation(Coords_Earth[i_sat - 1][0], Coords_Earth[i_sat - 1][0],
-                                                 Coords_Earth[i_sat - 1][0]), JupiterMoons.check_eclipse(
+            return JupiterMoons.check_occultation(Coords_Earth[i_sat - 1][0], Coords_Earth[i_sat - 1][0],
+                                                  Coords_Earth[i_sat - 1][0]), JupiterMoons.check_eclipse(
                 Coords_Sun[i_sat - 1][0], Coords_Sun[i_sat - 1][0], Coords_Sun[i_sat - 1][0])
 
     @staticmethod
@@ -1222,10 +1298,37 @@ class JupiterMoons(object):
         :param epoch: Epoch the calculations should be made for
         :type epoch: :py:class:'Epoch'
 
-        :returns: Distance to the satellite being ecclipsed, occulted in penumbra
+        :returns: Result matrix for the four Galilean satellites
+            Row 0: Io            Column 0: Occultation
+            Row 1: Europa        Column 1: Eclipse
+            Row 2: Ganymede      Column 2: No use
+            Row 3: Callisto
         :rtype: tuple
 
         :raises: TypeError if input values are wrong type
+
+        Calculation of result matrix for December 16 at 0h UTC
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> result_matrix = JupiterMoons.is_phenomena(utc_1992_12_16_00_00_00)
+        >>> print(result_matrix[0])
+        [False, False, False]
+        >>> print(result_matrix[1])
+        [False, False, False]
+        >>> print(result_matrix[2])
+        [False, False, False]
+        >>> print(result_matrix[3])
+        [False, False, False]
+        >>> io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
+        >>> result_matrix = JupiterMoons.is_phenomena(io_ecc_start_2021_02_12_14_19_14)
+        >>> print(result_matrix[0])
+        [False, True, False]
+        >>> print(result_matrix[1])
+        [False, False, False]
+        >>> print(result_matrix[2])
+        [False, False, False]
+        >>> print(result_matrix[3])
+        [False, False, False]
         """
 
         # Get distance Matrix
@@ -1237,7 +1340,7 @@ class JupiterMoons(object):
                          [False, False, False]]
 
         for row in range(len(result_matrix)):
-            for col in range(len(result_matrix[row])):
+            for col in range(len(result_matrix[row]) - 1):
                 result_matrix[row][col] = (1 >= dist_matrix[row][col] >= 0)
 
         return result_matrix
@@ -1255,6 +1358,15 @@ class JupiterMoons(object):
 
         :returns: Perspective distance to Jupiter's center in Jupiter's radii
         :rtype: float
+
+        Calculation of the perspective distance of the planet Io to the center of Jupiter
+        for December 16 at 0h UTC as seen from the Earth
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
+        >>> io_radius_to_center_of_jupiter_earth = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
+        >>> print(io_radius_to_center_of_jupiter_earth)
+        3.457757270630766
         """
 
         # Accounting for elliptical Jupiter disk
@@ -1263,7 +1375,7 @@ class JupiterMoons(object):
         return sqrt(X ** 2 + Y ** 2)
 
     @staticmethod
-    def check_occulation(X=0, Y=0, Z=0, epoch=None, i_sat=None):
+    def check_occultation(X=0, Y=0, Z=0, epoch=None, i_sat=None):
         """This method checks if the given coordinates or Epoch correspond with a
         satellite being in occultation.
 
@@ -1278,10 +1390,19 @@ class JupiterMoons(object):
         :param i_sat: Index of the satellite (only for given Epoch)
         :type i_sat: int
 
-        :returns: Distance to center of Jupiter (negative if in front,
-            positive if behind)
+        :returns: Perspective distance to center of Jupiter in Jupiter radii as seen from the Earth (value of perspective distance is negative when the satellite is closer to the Earth then Jupiter otherwise positiv)
         :rtype: float
         :raises: TypeError if input values are wrong type
+
+
+        Calculation of the perspective distance of the planet Io squareroot(X^2 + Y^2) to the center of Jupiter
+        for December 16 at 0h UTC as seen from the Earth
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
+        >>> io_distance_to_center_of_jupiter_earthview = JupiterMoons.check_occultation(result_matrix[0][0], result_matrix[0][1])
+        >>> print(io_distance_to_center_of_jupiter_earthview)
+        -3.457757270630766
         """
 
         # Check if Epoch is given
@@ -1315,10 +1436,19 @@ class JupiterMoons(object):
         :param i_sat: Index of the satellite (only for given Epoch)
         :type i_sat: int
 
-        :returns: Whether the satellite is in eclipse. Be aware that the events will later be seen
-            from the Earth (by the light-time tau)
-        :rtype: bool
+        :returns: perspective distance to center of Jupiter in Jupiter radii as seen from the Sun (value of perspective distance is negative when the satellite is closer to the Sun then Jupiter otherwise positive)
+        :rtype: float
         :raises: TypeError if input values are wrong type
+
+
+        Calculation of the Perspective distance of the planet Io squareroot(X_0^2 + Y_0^2) to the center of Jupiter
+        for December 16 at 0h UTC as seen from the Sun
+
+        >>> utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+        >>> result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=True)
+        >>> io_radius_to_center_of_jupiter_sunview = JupiterMoons.check_eclipse(result_matrix[0][0], result_matrix[0][1])
+        >>> print(io_radius_to_center_of_jupiter_sunview)
+        -2.553301264153796
         """
 
         # Check if Epoch is given
@@ -1342,13 +1472,149 @@ def main():
     def print_me(msg, val):
         print("{}: {}".format(msg, val))
 
-    # Let's show some uses of Sun functions
+    # Let's show some uses of JupiterMoons functions
     print("\n" + 35 * "*")
     print("*** Use of JupiterMoons class")
     print(35 * "*" + "\n")
 
-    # TODO: add more functions to main()
+    # Lets compute the corrected rectangular geocentric position of Jupiter's satellites
+    # for a given epoch, using the E5-theory.
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    io, europa, ganymede, callisto = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00)
+
+    print("Corrected rectangular geocentric position of Io [X, Y , Z]: ", io)
+    # (-3.450168811390241, 0.21370246960509387, -4.818966623735296)
+
+    print("Corrected rectangular geocentric position of Europa [X, Y , Z]: ", europa)
+    # (7.441869121153001, 0.27524463479625677, -5.747104399729193)
+
+    print("Corrected rectangular geocentric position of Ganymede [X, Y , Z]: ", ganymede)
+    # (1.201111684800708, 0.5899903274317162, -14.940581367576527)
+
+    print("Corrected rectangular geocentric position of Callisto [X, Y , Z]: ", callisto)
+    # (7.071943240286434, 1.0289562923230684, -25.224137724734955)
+
+    print("")
+
+    # Lets compute the uncorrected rectangular geocentric position of Jupiter's satellites
+    # for a given epoch, using the E5-theory.
+    # So the effects of different light-time and perspective described in Pymeeus page 313 - 314 are neglected
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    io_uncorrected, europa_uncorrected, ganymede_uncorrected, callisto_uncorrected = \
+        JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, do_correction=False)
+
+    print("Uncorrected rectangular geocentric position of Io [X, Y , Z]: ", io_uncorrected)
+    # (-3.4489935969836503, 0.21361563816963675, -4.818966623735296)
+
+    print("Uncorrected rectangular geocentric position of Europa [X, Y , Z]: ", europa_uncorrected)
+    # (7.438101803124541, 0.2751112576349763, -5.747104399729193)
+
+    print("Uncorrected rectangular geocentric position of Ganymede [X, Y , Z]: ", ganymede_uncorrected)
+    # (1.1990581804888616, 0.589247092847632, -14.940581367576527)
+
+    print("Uncorrected rectangular geocentric position of Callisto [X, Y , Z]: ", callisto_uncorrected)
+    # (7.056237832405445, 1.0267678919629089, -25.224137724734955)
+
+    print("")
+
+    # Lets calculate the distance between Earth and Jupiter (DELTA) for a given epoch.
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    delta, tau, l, b, r = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
+
+    print("Distance between Earth and Jupiter in AU: ", delta)
+    # 5.6611211815432645
+
+    print("Light-time from Earth to Jupiter in d (day): ", tau)
+    # 0.03269590898252075
+
+    print("")
+
+    # Lets calculate the perspective distance in Jupiter radii of all satellites
+    # for an eclipse of Io.
+
+    io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
+    result_matrix = JupiterMoons.check_phenomena(io_ecc_start_2021_02_12_14_19_14)
+    # Row 0: Io          Column 0: perspective distance as seen from the Earth
+    # Row 1: Europa      Column 1: perspective distance as seen from the Sun
+    # Row 2: Ganymede    Column 2: No use
+    # Row 3: Callisto
+
+    # print Row 0
+    print("(perspective distance of Io (Earth View), perspective distance of Io (Sun view), No use): ")
+    print(result_matrix[0])
+    # [1.1926058680144362, 0.856027716233023, 0.0]
+
+    # print Row 1
+    print("(perspective distance of Europa (Earth View), perspective distance of Europa (Sun view), No use): ")
+    print(result_matrix[1])
+    # [-8.739720236890856, -8.893094092124032, 0.0]
+
+    # print Row 2
+    print("(perspective distance of Ganymede (Earth View), perspective distance of Ganymede (Sun view), No use): ")
+    print(result_matrix[2])
+    # [14.069121992481382, 13.8323491767871, 0.0]
+
+    # print Row 3
+    print("(perspective distance of Callisto (Earth View), perspective distance of Callisto (Sun view), No use): ")
+    print(result_matrix[3])
+    # [-2.934134686233644, -3.9904786452498144, 0.0]
+
+    print("")
+
+    # Lets check if an eclipse or\and occultation for any of the four Galilean satellites is detected for a given epoch
+
+    io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
+
+    # Structure of result matrix
+    # Row 0: Io          Column 0: Occultation True\False
+    # Row 1: Europa      Column 1: Eclipse True\False
+    # Row 2: Ganymede    Column 2: No use
+    # Row 3: Callisto
+
+    result_matrix = JupiterMoons.is_phenomena(io_ecc_start_2021_02_12_14_19_14)
+    # print Row 0
+    print("(Occultation of Io, Eclipse of Io, No use): ")
+    print(result_matrix[0])
+    # [False, True, False]
+
+    # print Row 1
+    print(" (Occultation of Europa, Eclipse of Europa, No use): ")
+    print(result_matrix[1])
+    # [False, False, False]
+
+    # print Row 2
+    print(" (Occultation of Ganymede, Eclipse of Gaymede, No use): ")
+    print(result_matrix[2])
+    # [False,False,False]
+
+    # print Row 3
+    print("(Occultation of Callisto, Eclipse of Callisto, No use): ")
+    print(result_matrix[3])
+    # [False,False,False]
+
+    print("")
+
+    # Calculation of the perspective distance ot the planet Io to the center of Jupiter
+    # for December 16 at 0h UTC as seen from the Sun
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=True)
+    io_radius_to_center_of_jupiter_sun = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
+
+    print("Perspective distance of Io as seen from the Sun in Jupiter radii: ", io_radius_to_center_of_jupiter_sun)
+    # 3.457757270630766
+
+    print("")
+
+    # Calculation of the perspective distance ot the planet Io to the center of Jupiter
+    # for December 16 at 0h UTC as seen from the Earth
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
+    io_radius_to_center_of_jupiter_earth = JupiterMoons.check_coordinates(result_matrix[0][0], result_matrix[0][1])
+
+    print("Perspective distance of Io as seen from the Earth in Jupiter radii: ", io_radius_to_center_of_jupiter_earth)
+    # 2.553301264153796
 
 
 if __name__ == "__main__":
+
     main()
