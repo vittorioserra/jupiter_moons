@@ -13,14 +13,14 @@ time_step = 1.157401129603386e-05 #time-step -->60 seconds
 phenomena_matrix = JupiterMoons.check_phenomena(epoch)
 print(phenomena_matrix)
 
-print(JupiterMoons.rectangular_positions(epoch))
+print(JupiterMoons.rectangular_positions_jovian_equatorial(epoch))
 
 Phenomena.crossing_point_advanced_accuracy(epoch, 3600)
 
 for a in range(1, 3600):
 
     epoch += time_step
-    phenomena_matrix = JupiterMoons.rectangular_positions(epoch, solar=True)
+    phenomena_matrix = JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=True)
 
     for i in range(0,1):
         if ((phenomena_matrix[i][0] < 1) and (phenomena_matrix[i][0] > 0)):

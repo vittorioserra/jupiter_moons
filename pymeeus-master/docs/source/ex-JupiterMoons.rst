@@ -7,12 +7,22 @@ Let's define a small helper function::
         print("{}: {}".format(msg, val))
 
 
+Lets compute the ascending node of Jupiter as well as the longitude of the node of
+the equator of Jupiter on the ecliptic (psi)::
+
+    utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
+    psi_corrected, OMEGA_ascending_node_jupiter = JupiterMoons.jupiter_system_angles(utc_1992_12_16_00_00_00)
+    print("Ascending node of Jupiter: ", OMEGA_ascending_node_jupiter)
+    #100.39249942976576
+    print("Longitude of the node of the eauator of Jupiter on the ecliptic (psi):", psi_corrected)
+    #317.1058009213959
+
 Lets compute the corrected rectangular geocentric position of Jupiter's satellites
 for a given epoch, using the E5-theory::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
 
-    io, europa, ganymede, callisto = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00)
+    io, europa, ganymede, callisto = JupiterMoons.rectangular_positions_jovian_equatorial(utc_1992_12_16_00_00_00)
 
     print("Corrected rectangular geocentric position of Io [X, Y , Z]: ", io)
     #(-3.450168811390241, 0.21370246960509387, -4.818966623735296)
@@ -33,7 +43,7 @@ using the E5-theory::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
     io_uncorrected, europa_uncorrected, ganymede_uncorrected, callisto_uncorrected = \
-        JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, do_correction=False)
+        JupiterMoons.rectangular_positions_jovian_equatorial(utc_1992_12_16_00_00_00, do_correction=False)
 
     print("Uncorrected rectangular geocentric position of Io [X, Y , Z]: ", io_uncorrected)
     # (-3.4489935969836503, 0.21361563816963675, -4.818966623735296)
@@ -128,7 +138,7 @@ for December 16 at 0h UTC as seen from the Sun::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
 
-    result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=True)
+    result_matrix = JupiterMoons.rectangular_positions_jovian_equatorial(utc_1992_12_16_00_00_00, solar=True)
 
     #Structure of result matrix
     # Row 0: Io          Column 0: X coordinate of satellite in Jupiter radii
@@ -145,7 +155,7 @@ Calculation of the perspective distance ot the planet Io to the center of Jupite
 for December 16 at 0h UTC as seen from the Earth::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
-    result_matrix = JupiterMoons.rectangular_positions(utc_1992_12_16_00_00_00, solar=False)
+    result_matrix = JupiterMoons.rectangular_positions_jovian_equatorial(utc_1992_12_16_00_00_00, solar=False)
 
     #Structure of result matrix
     # Row 0: Io          Column 0: X coordinate of satellite in Jupiter radii
@@ -157,3 +167,4 @@ for December 16 at 0h UTC as seen from the Earth::
 
     print("Perspective distance of Io as seen from the Earth in Jupiter radii: ", io_radius_to_center_of_jupiter_earth)
     # 2.553301264153796
+

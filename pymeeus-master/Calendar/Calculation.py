@@ -17,7 +17,7 @@ s_jd = 1.157401129603386e-05
 
 class CalculationResult(Result):
     """ This class handles results calculated by the pymeeus
-    JupiterMoons.rectangular_positions() method.
+    JupiterMoons.rectangular_positions_jovian_equatorial() method.
     It supports sorting the results by date of the calculation
     """
 
