@@ -8,17 +8,17 @@ Let's define a small helper function::
 
 
 Lets compute the ascending node of Jupiter as well as the longitude of the node of
-the equator of Jupiter on the ecliptic (psi)::
+the equator of Jupiter on the ecliptic (psi) for the 16.12.1992 at 0h UTC::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
     psi_corrected, OMEGA_ascending_node_jupiter = JupiterMoons.jupiter_system_angles(utc_1992_12_16_00_00_00)
     print("Ascending node of Jupiter: ", OMEGA_ascending_node_jupiter)
     #100.39249942976576
-    print("Longitude of the node of the eauator of Jupiter on the ecliptic (psi):", psi_corrected)
+    print("Longitude of the node of the equator of Jupiter on the ecliptic (psi):", psi_corrected)
     #317.1058009213959
 
 Lets compute the corrected rectangular geocentric position of Jupiter's satellites
-for a given epoch, using the E5-theory::
+for a given epoch, using the E5-theory for the 16.12.1992 at 0h UTC::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
 
@@ -36,7 +36,7 @@ for a given epoch, using the E5-theory::
     print("Corrected rectangular geocentric position of Callisto [X, Y , Z]: ", callisto)
     #(7.071943240286434, 1.0289562923230684, -25.224137724734955)
 
-Lets compute the uncorrected rectangular geocentric position of Jupiter's satellites for a given epoch,
+Lets compute the uncorrected rectangular geocentric position of Jupiter's satellites for the 16.12.1992 at 0h UTC,
 using the E5-theory::
 
     #So the effects of different light-time and perspective described in Pymeeus page 313 - 314 are neglected
@@ -57,7 +57,7 @@ using the E5-theory::
     print("Uncorrected rectangular geocentric position of Callisto [X, Y , Z]: ", callisto_uncorrected)
     # (7.056237832405445, 1.0267678919629089, -25.224137724734955)
 
-Lets calculate the distance between Earth and Jupiter (DELTA) for a given epoch::
+Lets calculate the distance between Earth and Jupiter (DELTA) for the 16.12.1992 at 0h UTC::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
     delta, tau, l, b, r = JupiterMoons.calculate_DELTA(utc_1992_12_16_00_00_00)
@@ -69,7 +69,7 @@ Lets calculate the distance between Earth and Jupiter (DELTA) for a given epoch:
     #0.03269590898252075
 
 Lets calculate the perspective distance in Jupiter radii of all satellites
-for an eclipse of Io::
+for an eclipse of Io (12.02.2021 14h 19min 12s Terrestrial Time)::
 
     io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
 
@@ -82,33 +82,34 @@ for an eclipse of Io::
     # Row 3: Callisto
 
     # print Row 0
-    print("(perspective distance of Io (Earth View), perspective distance of Io (Sun view), No use): ")
+    print("(perspective distance of Io (Earth View), perspective distance of Io (Sun view)): ")
     print(result_matrix[0])
-    #[1.1926058680144362, 0.856027716233023, 0.0]
+    #[1.1926058680144362, 0.856027716233023]
 
     # print Row 1
-    print("(perspective distance of Europa (Earth View), perspective distance of Europa (Sun view), No use): ")
+    print("(perspective distance of Europa (Earth View), perspective distance of Europa (Sun view)): ")
     print(result_matrix[1])
-    #[-8.739720236890856, -8.893094092124032, 0.0]
+    #[-8.739720236890856, -8.893094092124032]
 
     # print Row 2
-    print("(perspective distance of Ganymede (Earth View), perspective distance of Ganymede (Sun view), No use): ")
+    print("(perspective distance of Ganymede (Earth View), perspective distance of Ganymede (Sun view)): ")
     print(result_matrix[2])
-    #[14.069121992481382, 13.8323491767871, 0.0]
+    #[14.069121992481382, 13.8323491767871]
 
     # print Row 3
-    print("(perspective distance of Callisto (Earth View), perspective distance of Callisto (Sun view), No use): ")
+    print("(perspective distance of Callisto (Earth View), perspective distance of Callisto (Sun view)): ")
     print(result_matrix[3])
-    #[-2.934134686233644, -3.9904786452498144, 0.0]
+    #[-2.934134686233644, -3.9904786452498144]
 
-Lets check if an eclipse or\and occultation for any of the four Galilean satellites is detected for a given epoch::
+Lets check if an eclipse or\and occultation for any of the four Galilean satellites
+is detected for 12.02.2021 14h 19min 12s Terrestrial Time ::
 
     io_ecc_start_2021_02_12_14_19_14 = Epoch(2021, 2, 12.5966898148148)
 
     #Structure of result matrix
     # Row 0: Io          Column 0: Occultation True\False
     # Row 1: Europa      Column 1: Eclipse True\False
-    # Row 2: Ganymede    Column 2: No use
+    # Row 2: Ganymede
     # Row 3: Callisto
 
     result_matrix = JupiterMoons.is_phenomena(io_ecc_start_2021_02_12_14_19_14)
@@ -116,25 +117,25 @@ Lets check if an eclipse or\and occultation for any of the four Galilean satelli
     #print Row 0
     print("(Occultation of Io, Eclipse of Io, No use): ")
     print(result_matrix[0])
-    #[False, True, False]
+    #[False, True]
 
     # print Row 1
-    print(" (Occultation of Europa, Eclipse of Europa, No use): ")
+    print(" (Occultation of Europa, Eclipse of Europa): ")
     print(result_matrix[1])
-    #[False, False, False]
+    #[False, False]
 
     # print Row 2
-    print(" (Occultation of Ganymede, Eclipse of Gaymede, No use): ")
+    print(" (Occultation of Ganymede, Eclipse of Ganymede): ")
     print(result_matrix[2])
-    #[False,False,False]
+    #[False,False]
 
     # print Row 3
-    print("(Occultation of Callisto, Eclipse of Callisto, No use): ")
+    print("(Occultation of Callisto, Eclipse of Callisto): ")
     print(result_matrix[3])
-    #[False,False,False]
+    #[False,False]
 
 Calculation of the perspective distance ot the planet Io to the center of Jupiter
-for December 16 at 0h UTC as seen from the Sun::
+for the 16.12.1992 at 0h UTC as seen from the Sun::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
 
@@ -152,7 +153,7 @@ for December 16 at 0h UTC as seen from the Sun::
     #3.457757270630766
 
 Calculation of the perspective distance ot the planet Io to the center of Jupiter
-for December 16 at 0h UTC as seen from the Earth::
+for the 16.12.1992 at 0h UTC as seen from the Earth::
 
     utc_1992_12_16_00_00_00 = Epoch(1992, 12, 16, utc=True)
     result_matrix = JupiterMoons.rectangular_positions_jovian_equatorial(utc_1992_12_16_00_00_00, solar=False)
