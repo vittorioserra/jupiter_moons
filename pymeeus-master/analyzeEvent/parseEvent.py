@@ -303,4 +303,4 @@ class ParseEvent(object):
 if __name__ == "__main__":
     # first argument is filename of data to be imported (to be parsed) into SQLite database named Event.sqlite
     # set second argument to "Thuillot" if Thiullot data is imported, set to "PyMeeus" if PyMeeus data is imported
-    ParseEvent("AccuracyTests/2020-time_elliptical_apparent-radius.txt", "Apparent moon radius + Elliptical + Time corrected (PyMeeus)")
+    ParseEvent("jupiterConfigPyMeeus-18.txt", "PyMeeus")
