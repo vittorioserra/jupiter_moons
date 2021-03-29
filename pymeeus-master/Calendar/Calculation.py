@@ -9,7 +9,7 @@ from typing import List, Tuple
 from Calendar.PhenomenaDetection import Detection, Phenomenom, Result
 
 from pymeeus.Epoch import Epoch
-from ..pymeeus.JupiterMoons import JupiterMoons
+from pymeeus.JupiterMoons import JupiterMoons
 
 # 1 second in jd = 1.157401129603386e-05
 s_jd = 1.157401129603386e-05
@@ -109,10 +109,14 @@ class TimingResult(Result):
             # Iterate through shadow types start of first shadow phenomenom already found -> start at index 1
             for i in range(1, len(phenomenom_flag)):
                 # While shadow type is not reached -> calculate for next time step
-                while not (cur_phenomenom.shadow_type == phenomenom_flag[i] and cur_phenomenom.phenomenom_occurs):
+                while not cur_phenomenom.shadow_type == phenomenom_flag[i] and cur_phenomenom.phenomenom_occurs:
                     cur_phenomenom = Detection.check_single_phenomena(cur_phenomenom.epoch + time_step,
                                                                       cur_phenomenom.sat,
                                                                       cur_phenomenom.phenomenom_type)
+                # Break if phenomenom end is exceeded
+                if not cur_phenomenom.phenomenom_occurs:
+                    break
+
                 # Add Phenomenom to list
                 other_timings.append(
                     TimingResult(cur_phenomenom.epoch, self.appereance_type, self.row, self.col,
@@ -127,10 +131,16 @@ class TimingResult(Result):
             # Iterate through shadow types start of first shadow phenomenom already found -> start at index 1
             for i in range(1, len(phenomenom_flag)):
                 # While shadow type is not reached -> calculate for previous time step
-                while not (cur_phenomenom.shadow_type == phenomenom_flag[i] and cur_phenomenom.phenomenom_occurs):
+                while not cur_phenomenom.shadow_type == phenomenom_flag[i]:
                     cur_phenomenom = Detection.check_single_phenomena(cur_phenomenom.epoch - time_step,
                                                                       cur_phenomenom.sat,
                                                                       cur_phenomenom.phenomenom_type)
+                    # Break if phenomenom start is exceeded
+                    if not cur_phenomenom.phenomenom_occurs:
+                        break
+                if not cur_phenomenom.phenomenom_occurs:
+                    break
+
                 # Add Phenomenom to list
                 other_timings.append(
                     TimingResult(cur_phenomenom.epoch, self.appereance_type, self.row, self.col,
@@ -138,6 +148,7 @@ class TimingResult(Result):
                                  Detection.check_single_phenomena(cur_phenomenom.epoch,
                                                                   cur_phenomenom.sat,
                                                                   cur_phenomenom.phenomenom_type)))
+
             # Add self TimingResult - 1 timestep as last appereance of extrem shadow phenomenom to list
             other_timings.append(TimingResult(self.epoch - time_step, self.appereance_type, self.row, self.col,
                                               self.rough_time_step,
@@ -312,8 +323,8 @@ class Calculation:
         """
 
         # Widen timespan in order to calculate phenomena at the limits
-        start_epoch -= s_jd * 60 * 360
-        end_epoch += s_jd * 60 * 360
+        start_epoch -= s_jd * 60 * 720
+        end_epoch += s_jd * 60 * 720
 
         # Calc time span each process has to calculate
         time_span_per_core = (end_epoch - start_epoch) / self.cpu_core_count
@@ -880,15 +891,10 @@ if __name__ == "__main__":
     epoch_start = Epoch()
 
     # TODO find bug for the following parameters
-    # epoch_start.set(2020, 6, 19, 0)
-    #
-    # epoch_stop = Epoch()
-    # epoch_stop.set(2020, 6, 20, 0)
-
-    epoch_start.set(2020, 6, 18, 0)
+    epoch_start.set(2020, 6, 19, 0)
 
     epoch_stop = Epoch()
-    epoch_stop.set(2020, 6, 21, 0)
+    epoch_stop.set(2020, 6, 20, 0)
 
     calc_time_step = 60 * 120 * 1.157401129603386e-05
 
