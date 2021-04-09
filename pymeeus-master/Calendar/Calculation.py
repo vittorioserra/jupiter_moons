@@ -2,14 +2,15 @@
 
 import functools
 import multiprocessing
+import time
 from math import floor
 
 from typing import List, Tuple
 
 from Calendar.PhenomenaDetection import Detection, Phenomenom, Result
 
-from pymeeus.Epoch import Epoch
-from pymeeus.JupiterMoons import JupiterMoons
+from pymeeus_optimized.Epoch import Epoch
+from pymeeus_optimized.JupiterMoons import JupiterMoons
 
 # 1 second in jd = 1.157401129603386e-05
 s_jd = 1.157401129603386e-05
@@ -890,15 +891,16 @@ class Calculation:
 if __name__ == "__main__":
     epoch_start = Epoch()
 
-    # TODO find bug for the following parameters
-    epoch_start.set(2020, 6, 19, 0)
+    epoch_start.set(2020, 1, 1, 0)
 
     epoch_stop = Epoch()
-    epoch_stop.set(2020, 6, 20, 0)
+    epoch_stop.set(2020, 1, 10, 0)
 
     calc_time_step = 60 * 120 * 1.157401129603386e-05
 
+    start_time = time.time()
     calc = Calculation(epoch_start, epoch_stop, calc_time_step, 0)
+    end_time = time.time()
 
     print()
 
@@ -907,3 +909,5 @@ if __name__ == "__main__":
               tmng.phenomenom.shadow_type)
 
     print()
+
+    print("Calculation time: ", end_time - start_time, "s")

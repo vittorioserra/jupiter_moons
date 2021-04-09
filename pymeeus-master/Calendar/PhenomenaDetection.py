@@ -2,9 +2,9 @@ import functools
 from enum import unique, IntEnum
 from typing import List
 
-from pymeeus.Epoch import Epoch
-from pymeeus.Jupiter import Jupiter
-from pymeeus.JupiterMoons import JupiterMoons
+from pymeeus_optimized.Epoch import Epoch
+from pymeeus_optimized.Jupiter import Jupiter
+from pymeeus_optimized.JupiterMoons import JupiterMoons
 
 from math import atan, tan, sqrt
 
@@ -174,8 +174,8 @@ class Phenomenom(Result):
         self.phenomenom_occurs = updated_phenomenom.phenomenom_occurs
         self.shadow_type = updated_phenomenom.shadow_type
 
-    def _calc_aparent_moon_radius(self) -> None:
-        """ Calculates the aparent moon radius (Jupiter's radii) that differs because
+    def _calc_apparent_moon_radius(self) -> None:
+        """ Calculates the apparent moon radius (Jupiter's radii) that differs because
         of differing z-Coordinates
 
         :rtype: None
@@ -206,8 +206,8 @@ class Phenomenom(Result):
         :rtype: None
         """
 
-        # Calculate aparent moon radius
-        self._calc_aparent_moon_radius()
+        # Calculate apparent moon radius
+        self._calc_apparent_moon_radius()
 
         # Check z-Coordinate if Phenonomenom is possible
         if self.has_right_z_sign():
