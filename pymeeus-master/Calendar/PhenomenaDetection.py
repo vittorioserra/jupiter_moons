@@ -174,40 +174,12 @@ class Phenomenon(Result):
         self.phenomenon_occurs = updated_phenomenon.phenomenon_occurs
         self.shadow_type = updated_phenomenon.shadow_type
 
-    def _calc_apparent_moon_radius(self) -> None:
-        """ Calculates the apparent moon radius (Jupiter's radii) that differs because
-        of differing z-Coordinates
-
-        :rtype: None
-        """
-
-        # 1 AU in Jupiter's radii
-        jr_au = 2092.512039
-
-        # Calculate distances to observer
-        # Solar phenomenon
-        if self.phenomenon_type in ["EC", "OM"]:
-            distance_jup = JupiterMoons.calculate_DELTA(self.epoch)[0] * jr_au
-        # Earth observed phenomenon
-        else:
-            distance_jup = Jupiter.geometric_heliocentric_position(self.epoch)[2] * jr_au
-        distance_moon = distance_jup + self.z
-
-        # Calculate observed Angle
-        alpha = atan(moons_radii[self.sat] / distance_moon)
-
-        # Calc observed radius in plane of Jupiter with alpha as observed angle
-        self.moon_radius = distance_jup * tan(alpha)
-
     def _check_shadow_type(self) -> None:
         """Private method that determines shadow type and whether a
         phenomenon occurs
 
         :rtype: None
         """
-
-        # Calculate apparent moon radius
-        self._calc_apparent_moon_radius()
 
         # Check z-Coordinate if Phenomenon is possible
         if self.has_right_z_sign():
