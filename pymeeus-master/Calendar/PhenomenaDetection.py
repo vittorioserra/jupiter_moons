@@ -66,29 +66,29 @@ class Result:
         return self.epoch.jde() == other.epoch.jde()
 
 
-class Phenomenom(Result):
+class Phenomenon(Result):
     """Class that delivers calculation data for phenomena
     """
 
-    def __init__(self, phenomenom_type: str, sat: int, distance: float, z: float, epoch: Epoch,
+    def __init__(self, phenomenon_type: str, sat: int, distance: float, z: float, epoch: Epoch,
                  shadow_radius_umbra: float = 0,
                  shadow_radius_penumbra: float = 0):
-        """Constructor for Phenomenom class.
+        """Constructor for Phenomenon class.
         Sortable by Epoch
 
-        :param phenomenom_type: Type of phenomenom:
+        :param phenomenon_type: Type of phenomenon:
             PA: Transit
             OC: Ocultation
             OM: Transit of the umbra of the satellite on the disk of Jupiter
             EC: Eclipse
-        :type phenomenom_type: str
+        :type phenomenon_type: str
         :param sat: Number of satellite - 1
             0: Io
             1: Europa
-            2: Ganymed
+            2: Ganymede
             3: Callisto
         :type sat: int
-        :param distance: Perspectivic distance to center of Jupiter
+        :param distance: Perspective distance to center of Jupiter
         :type distance: float
         :param z: z-Coordinate of satellite
         :type z: float
@@ -106,7 +106,7 @@ class Phenomenom(Result):
         super().__init__(epoch)
 
         # Initialize variables
-        self.phenomenom_type = phenomenom_type
+        self.phenomenon_type = phenomenon_type
         self.sat = sat
         self.distance = distance
         self.z = z
@@ -115,15 +115,15 @@ class Phenomenom(Result):
 
         self.moon_radius = moons_radii[sat]
 
-        self.phenomenom_occurs = False
+        self.phenomenon_occurs = False
         self.shadow_type: str = ""
 
-        # Check shadow phenomenom type
+        # Check shadow phenomenon type
         self._check_shadow_type()
 
     def get_critical_radius(self) -> float:
         """Method that calculates the perspective radius (distance) to Jupiter
-        that is at least necessary to have an extreme shadow phenomenom.
+        that is at least necessary to have an extreme shadow phenomenon.
 
         :returns: Perspective distance (in Jupiter's radii) to Jupiter for
             extreme shadow phenomena
@@ -131,48 +131,48 @@ class Phenomenom(Result):
         """
 
         # For eclipse return penumbra radius + moon radius
-        if self.phenomenom_type == "EC":
+        if self.phenomenon_type == "EC":
             return self.shadow_radius_penumbra + self.moon_radius
         # For other phenomena return Jupiter's radius (= 1) + moon radius
         else:
             return 1 + self.moon_radius
 
     def has_right_z_sign(self) -> bool:
-        """Determines whether the sign of the z-Coordinate corresponds with the phenomenom
+        """Determines whether the sign of the z-Coordinate corresponds with the phenomenon
         type. OC and EC only possible for more distant moons, OM and PA for moons that are
         less distant than Jupiter.
 
         :returns: Whether the sign of the z-Coordinate corresponds with the
-            phenomenom type
+            phenomenon type
         :rtype: bool
         """
 
-        return (self.phenomenom_type in ["PA", "OM"] and self.z < 0) or (
-                self.phenomenom_type in ["OC", "EC"] and self.z > 0)
+        return (self.phenomenon_type in ["PA", "OM"] and self.z < 0) or (
+                self.phenomenon_type in ["OC", "EC"] and self.z > 0)
 
     def update(self, epoch: Epoch) -> None:
-        """Updates the Phenomenom object to a given Epoch
+        """Updates the Phenomenon object to a given Epoch
 
-        :param epoch: Epoch the phenomenom shall be updated
+        :param epoch: Epoch the phenomenon shall be updated
         :type epoch: Epoch
 
         :rtype: None
         """
 
-        # Calculate updated phenomenom
-        updated_phenomenom = Detection.check_single_phenomena(epoch, self.sat, self.phenomenom_type)
+        # Calculate updated phenomenon
+        updated_phenomenon = Detection.check_single_phenomena(epoch, self.sat, self.phenomenon_type)
 
-        # Copy all class variables from updated phenomenom
-        self.phenomenom_type = updated_phenomenom.phenomenom_type
-        self.sat = updated_phenomenom.sat
-        self.distance = updated_phenomenom.distance
-        self.z = updated_phenomenom.z
-        self.epoch = updated_phenomenom.epoch
-        self.shadow_radius_umbra = updated_phenomenom.shadow_radius_umbra
-        self.shadow_radius_penumbra = updated_phenomenom.shadow_radius_penumbra
-        self.moon_radius = updated_phenomenom.moon_radius
-        self.phenomenom_occurs = updated_phenomenom.phenomenom_occurs
-        self.shadow_type = updated_phenomenom.shadow_type
+        # Copy all class variables from updated phenomenon
+        self.phenomenon_type = updated_phenomenon.phenomenon_type
+        self.sat = updated_phenomenon.sat
+        self.distance = updated_phenomenon.distance
+        self.z = updated_phenomenon.z
+        self.epoch = updated_phenomenon.epoch
+        self.shadow_radius_umbra = updated_phenomenon.shadow_radius_umbra
+        self.shadow_radius_penumbra = updated_phenomenon.shadow_radius_penumbra
+        self.moon_radius = updated_phenomenon.moon_radius
+        self.phenomenon_occurs = updated_phenomenon.phenomenon_occurs
+        self.shadow_type = updated_phenomenon.shadow_type
 
     def _calc_apparent_moon_radius(self) -> None:
         """ Calculates the apparent moon radius (Jupiter's radii) that differs because
@@ -185,23 +185,23 @@ class Phenomenom(Result):
         jr_au = 2092.512039
 
         # Calculate distances to observer
-        # Solar phenomenom
-        if self.phenomenom_type in ["EC", "OM"]:
+        # Solar phenomenon
+        if self.phenomenon_type in ["EC", "OM"]:
             distance_jup = JupiterMoons.calculate_DELTA(self.epoch)[0] * jr_au
-        # Earth observated phenomenom
+        # Earth observed phenomenon
         else:
             distance_jup = Jupiter.geometric_heliocentric_position(self.epoch)[2] * jr_au
         distance_moon = distance_jup + self.z
 
-        # Calculate observated Angle
+        # Calculate observed Angle
         alpha = atan(moons_radii[self.sat] / distance_moon)
 
-        # Calc observated radius in plane of Jupiter with alpha as observated angle
+        # Calc observed radius in plane of Jupiter with alpha as observed angle
         self.moon_radius = distance_jup * tan(alpha)
 
     def _check_shadow_type(self) -> None:
         """Private method that determines shadow type and whether a
-        phenomenom occurs
+        phenomenon occurs
 
         :rtype: None
         """
@@ -209,13 +209,13 @@ class Phenomenom(Result):
         # Calculate apparent moon radius
         self._calc_apparent_moon_radius()
 
-        # Check z-Coordinate if Phenonomenom is possible
+        # Check z-Coordinate if Phenomenon is possible
         if self.has_right_z_sign():
             # Set flag
-            self.phenomenom_occurs = True
+            self.phenomenon_occurs = True
 
             # Phenomena with EXT and INT
-            if self.phenomenom_type in ["PA", "OC", "OM"]:
+            if self.phenomenon_type in ["PA", "OC", "OM"]:
                 # Exterior contact with shadow
                 if 1 - self.moon_radius < self.distance <= 1 + self.moon_radius:
                     self.shadow_type = "EXT"
@@ -223,8 +223,8 @@ class Phenomenom(Result):
                 elif self.distance <= 1 - self.moon_radius:
                     self.shadow_type = "INT"
                 else:
-                    # Unset flag, no phenomenom detected
-                    self.phenomenom_occurs = False
+                    # Unset flag, no phenomenon detected
+                    self.phenomenon_occurs = False
 
             # Phenomena with PEN
             else:
@@ -239,13 +239,13 @@ class Phenomenom(Result):
                         # Interior contact with shadow
                         self.shadow_type = "INT"
                 else:
-                    # Unset flag, no phenomenom detected
-                    self.phenomenom_occurs = False
+                    # Unset flag, no phenomenon detected
+                    self.phenomenon_occurs = False
 
 
 class Detection:
     """This class delivers methods for checking for any kind of phenomena
-    of Jupiter's four gallilean moons.
+    of Jupiter's four Galilean moons.
     """
 
     @unique
@@ -259,8 +259,8 @@ class Detection:
     phenomena_types_str = ["OC", "EC", "PA", "OM"]
 
     @staticmethod
-    def check_single_phenomena(epoch: Epoch, i_sat: int, phenomenom_type: str) -> Phenomenom:
-        """Calculates a Phenomenom object for a given satellite and phenomenom
+    def check_single_phenomena(epoch: Epoch, i_sat: int, phenomenon_type: str) -> Phenomenon:
+        """Calculates a Phenomenon object for a given satellite and phenomenon
         type to a given Epoch
 
         :param epoch: Epoch that shall be checked
@@ -268,11 +268,11 @@ class Detection:
         :param i_sat: Index of satellite (i.e. No. of Sat. - 1) that shall
             be checked
         :type i_sat: int
-        :param phenomenom_type: Type of the phenomenom being checked
-        :type phenomenom_type: str
+        :param phenomenon_type: Type of the phenomenon being checked
+        :type phenomenon_type: str
 
-        :returns: Phenomenom object for the given inputs
-        :rtype: Phenomenom
+        :returns: Phenomenon object for the given inputs
+        :rtype: Phenomenon
 
         :raises: TypeError, if no Epoch typed input is given
         """
@@ -281,16 +281,16 @@ class Detection:
         if not isinstance(epoch, Epoch):
             raise TypeError("Invalid input type")
 
-        # Calc perspective coordinates of the satellites depending on phenomenom type
-        Coords = JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=phenomenom_type in ["EC", "OM"])
+        # Calc perspective coordinates of the satellites depending on phenomenon type
+        Coords = JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=phenomenon_type in ["EC", "OM"])
 
         # Earth based phenomena
-        if phenomenom_type in ["PA", "OC"]:
+        if phenomenon_type in ["PA", "OC"]:
             # Calc perspective distance to Jupiter for given satellite
             distance = Detection.perspective_distance(Coords[i_sat][0], Coords[i_sat][1])
 
             # Return Phenomena instance
-            return Phenomenom(Detection.phenomena_types_str[Detection.phenomena_types_str.index(phenomenom_type)],
+            return Phenomenon(Detection.phenomena_types_str[Detection.phenomena_types_str.index(phenomenon_type)],
                               i_sat, distance, Coords[i_sat][2], epoch)
 
         # Solar phenomena
@@ -301,13 +301,13 @@ class Detection:
             r_umbra, r_penumbra = Detection.cone_radius(epoch, Coords[i_sat][2])
 
             # Return Phenomena instance
-            return Phenomenom(Detection.phenomena_types_str[Detection.phenomena_types_str.index(phenomenom_type)],
+            return Phenomenon(Detection.phenomena_types_str[Detection.phenomena_types_str.index(phenomenon_type)],
                               i_sat, distance, Coords[i_sat][2], epoch, r_umbra,
                               r_penumbra)
 
     @staticmethod
-    def check_phenomena(epoch: Epoch) -> List[List[Phenomenom]]:
-        """Calculates Phenomenom objects for all satellite and phenomena
+    def check_phenomena(epoch: Epoch) -> List[List[Phenomenon]]:
+        """Calculates Phenomenon objects for all satellite and phenomena
         types for a given Epoch
 
         :param epoch: Epoch that shall be checked
@@ -315,7 +315,7 @@ class Detection:
 
         :returns: 2D-Array of Phenomena object, where rows correspond with
             satellites, columns with phenomena types
-        :rtype: List[List[Phenomenom]]
+        :rtype: List[List[Phenomenon]]
 
         :raises: TypeError, if no Epoch typed input is given
         """
@@ -325,12 +325,12 @@ class Detection:
             raise TypeError("Invalid input type")
 
         # Result matrix, where each rows is for a satellite
-        # Column 0: Occultation (OC)
+        # Column 0: Ocultation (OC)
         # Column 1: Eclipse (EC)
         # Column 2: Transit (PA)
         # Column 3: Satellite umbra transit (OM)
         # noinspection PyTypeChecker
-        result_matrix: List[List[Phenomenom]] = [[None, None, None, None],
+        result_matrix: List[List[Phenomenon]] = [[None, None, None, None],
                                                  [None, None, None, None],
                                                  [None, None, None, None],
                                                  [None, None, None, None]]
@@ -343,13 +343,13 @@ class Detection:
         # Iterate through satellites
         for i_sat in range(0, 4):
             # Iterate through phenomena types
-            for phenomenom_type in Detection.PhenomenaTypes:
-                if phenomenom_type in [Detection.PhenomenaTypes.PA, Detection.PhenomenaTypes.OC]:
+            for phenomenon_type in Detection.PhenomenaTypes:
+                if phenomenon_type in [Detection.PhenomenaTypes.PA, Detection.PhenomenaTypes.OC]:
                     # Calc perspective distance to Jupiter
                     distance = Detection.perspective_distance(Coords_Earth[i_sat][0], Coords_Earth[i_sat][1])
 
                     # Fill result matrix with Phenomena instance
-                    result_matrix[i_sat][phenomenom_type] = Phenomenom(Detection.phenomena_types_str[phenomenom_type],
+                    result_matrix[i_sat][phenomenon_type] = Phenomenon(Detection.phenomena_types_str[phenomenon_type],
                                                                        i_sat, distance, Coords_Earth[i_sat][2], epoch)
                 else:
                     # Calc perspective distance to Jupiter
@@ -358,7 +358,7 @@ class Detection:
                     r_umbra, r_penumbra = Detection.cone_radius(epoch, Coords_Sun[i_sat][2])
 
                     # Fill result matrix with Phenomena instance
-                    result_matrix[i_sat][phenomenom_type] = Phenomenom(Detection.phenomena_types_str[phenomenom_type],
+                    result_matrix[i_sat][phenomenon_type] = Phenomenon(Detection.phenomena_types_str[phenomenon_type],
                                                                        i_sat, distance, Coords_Sun[i_sat][2], epoch,
                                                                        r_umbra,
                                                                        r_penumbra)
@@ -382,7 +382,7 @@ class Detection:
         """
 
         if ellipsoid:
-            # Distord y-coordinate to model elliptical Jupiter
+            # Distort y-coordinate to model elliptical Jupiter
             Y *= 1.071374
 
         return sqrt(X ** 2 + Y ** 2)
@@ -439,9 +439,9 @@ class Detection:
         jupiter_radius_au = 0.10045 * sun_radius_au
 
         if ellipsoid:
-            jupiter_radius_multiplicator = 1.071374
+            jupiter_radius_multiplier = 1.071374
         else:
-            jupiter_radius_multiplicator = 1.0
+            jupiter_radius_multiplier = 1.0
 
         jupiter_radius_au = jupiter_radius_au * 1.071374
 
@@ -449,18 +449,18 @@ class Detection:
         if epoch is not None:
             # Check types
             if isinstance(epoch, Epoch):
-                # Calcuate the position of jupiter in solar-spherical coordinates
+                # Calculate the position of jupiter in solar-spherical coordinates
                 l, b, r = Jupiter.geometric_heliocentric_position(epoch)
 
                 # alpha is the umbra defining angle
                 alpha_cone_rad = atan(r / (sun_radius_au - jupiter_radius_au))
 
-                # beta is the penumbra defing angle
+                # beta is the penumbra defying angle
                 beta_cone_rad = atan(r / (sun_radius_au + jupiter_radius_au))
 
                 # Compute distance of the sharpest pint behind jupiter in jupiter radii
                 cone_vertex_jupiter_radii = tan(alpha_cone_rad)
-                cone_beta_vertex_jupiter_radii = (-1 * jupiter_radius_multiplicator * tan(beta_cone_rad))
+                cone_beta_vertex_jupiter_radii = (-1 * jupiter_radius_multiplier * tan(beta_cone_rad))
 
                 return alpha_cone_rad, cone_vertex_jupiter_radii, beta_cone_rad, cone_beta_vertex_jupiter_radii
             else:

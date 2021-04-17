@@ -7,7 +7,7 @@ from math import floor
 
 from typing import List, Tuple
 
-from Calendar.PhenomenaDetection import Detection, Phenomenom, Result
+from Calendar.PhenomenaDetection import Detection, Phenomenon, Result
 
 from pymeeus_optimized.Epoch import Epoch
 from pymeeus_optimized.JupiterMoons import JupiterMoons
@@ -45,14 +45,14 @@ class TimingResult(Result):
     results by date of the calculation.
     """
 
-    def __init__(self, epoch: Epoch, appereance_type: str, row: int, col: int, rough_time_step: int,
-                 phenomenom: Phenomenom):
+    def __init__(self, epoch: Epoch, appearance_type: str, row: int, col: int, rough_time_step: int,
+                 phenomenon: Phenomenon):
         """ Constructor for TimingResult class
 
-        :param epoch: Exact Epoch of phenomenom, could differ from
-            phenomenom.epoch if time is corrected
+        :param epoch: Exact Epoch of phenomenon, could differ from
+            phenomenon.epoch if time is corrected
         :type epoch: Epoch
-        :param appereance_type: Whether it is start or end of phenomenom
+        :param appearance_type: Whether it is start or end of phenomenon
         :type: str
         :param row: Corresponding row in the timing_lists array (i.e.
             row = Number of satellite - 1)
@@ -60,25 +60,25 @@ class TimingResult(Result):
         :param col: Corresponding column in the timing_lists array (i.e.
             col = 0: Ocultation, col = 1: Eclipse, col = 2: Penumbra)
         :type col: int
-        :param phenomenom: Phanomenom that occurs
-        :type phenomenom: Phenomenom
+        :param phenomenon: Phenomenon that occurs
+        :type phenomenon: Phenomenon
         """
 
         # Call Result constructor
         super().__init__(epoch)
 
         # Initiate variables
-        self.appereance_type = appereance_type
+        self.appearance_type = appearance_type
         self.row = row
         self.col = col
         self.rough_time_step = rough_time_step
-        self.phenomenom = phenomenom
+        self.phenomenon = phenomenon
 
         self.is_time_corrected = False
 
     def find_other_shadow_phenomena(self, other_limit: Epoch) -> list:
         """Method that searches for the remaining shadow phenomena for a
-        given start or end of a phenomenom extreme shadow types.
+        given start or end of a phenomenon extreme shadow types.
         For Eclipse: PEN
         For other phenomena types: EXT
         Therefore a binary search will be used, in case of failure an
@@ -96,24 +96,24 @@ class TimingResult(Result):
         other_timings = []
 
         # Switch appearing shadow phenomena
-        if self.phenomenom.phenomenom_type == "EC":
-            phenomenom_flag = ["PEN", "EXT", "INT"]
+        if self.phenomenon.phenomenon_type == "EC":
+            phenomenon_flag = ["PEN", "EXT", "INT"]
         else:
-            phenomenom_flag = ["EXT", "INT"]
+            phenomenon_flag = ["EXT", "INT"]
 
         # Time step for search
         time_step = s_jd
 
         # If timing is start of phenomenon
-        if self.appereance_type == "start":
-            # Add self to list as start of extrem shadow phenomenom
+        if self.appearance_type == "start":
+            # Add self to list as start of extreme shadow phenomenon
             other_timings.append(self)
 
-            # Set starting Phenomenom(Epoch) for iteration
-            cur_phenomenom = self.phenomenom
+            # Set starting Phenomenon(Epoch) for iteration
+            cur_phenomenon = self.phenomenon
 
-            # Iterate through shadow types start of first shadow phenomenom already found -> start at index 1
-            for i in range(1, len(phenomenom_flag)):
+            # Iterate through shadow types start of first shadow phenomenon already found -> start at index 1
+            for i in range(1, len(phenomenon_flag)):
                 # flag, whether the shadow phenomenon was found
                 phenomenon_found = False
 
@@ -121,84 +121,84 @@ class TimingResult(Result):
                 if other_limit is not None:
                     # try binary search
                     other_tmng = self.binary_search_find_other_shadow_phenomena(self.epoch, other_limit, i,
-                                                                                phenomenom_flag)
-                    # check whether the binary search was successfull
+                                                                                phenomenon_flag)
+                    # check whether the binary search was successful
                     if other_tmng is not None:
                         # add phenomenon to list
-                        other_timings.append(TimingResult(other_tmng.epoch, self.appereance_type, self.row, self.col,
+                        other_timings.append(TimingResult(other_tmng.epoch, self.appearance_type, self.row, self.col,
                                                           self.rough_time_step, other_tmng))
                         phenomenon_found = True
 
                 # fallback to iterative algorithm
                 if other_limit is None or not phenomenon_found:
                     # While shadow type is not reached -> calculate for next time step
-                    while not cur_phenomenom.shadow_type == phenomenom_flag[i] and cur_phenomenom.phenomenom_occurs:
-                        cur_phenomenom = Detection.check_single_phenomena(cur_phenomenom.epoch + time_step,
-                                                                          cur_phenomenom.sat,
-                                                                          cur_phenomenom.phenomenom_type)
-                    # Break if phenomenom end is exceeded
-                    if not cur_phenomenom.phenomenom_occurs:
+                    while not cur_phenomenon.shadow_type == phenomenon_flag[i] and cur_phenomenon.phenomenon_occurs:
+                        cur_phenomenon = Detection.check_single_phenomena(cur_phenomenon.epoch + time_step,
+                                                                          cur_phenomenon.sat,
+                                                                          cur_phenomenon.phenomenon_type)
+                    # Break if phenomenon end is exceeded
+                    if not cur_phenomenon.phenomenon_occurs:
                         break
 
-                    # Add Phenomenom to list
+                    # Add Phenomenon to list
                     other_timings.append(
-                        TimingResult(cur_phenomenom.epoch, self.appereance_type, self.row, self.col,
-                                     self.rough_time_step, cur_phenomenom))
+                        TimingResult(cur_phenomenon.epoch, self.appearance_type, self.row, self.col,
+                                     self.rough_time_step, cur_phenomenon))
 
-        # If timing is start of phenomenom
-        elif self.appereance_type == "end":
+        # If timing is start of phenomenon
+        elif self.appearance_type == "end":
 
-            # Set starting Phenomenom(Epoch) for iteration
-            cur_phenomenom = self.phenomenom
+            # Set starting Phenomenon(Epoch) for iteration
+            cur_phenomenon = self.phenomenon
 
-            # Iterate through shadow types start of first shadow phenomenom already found -> start at index 1
-            for i in range(1, len(phenomenom_flag)):
+            # Iterate through shadow types start of first shadow phenomenon already found -> start at index 1
+            for i in range(1, len(phenomenon_flag)):
                 # flag, whether the shadow phenomenon was found
                 phenomenon_found = False
 
                 # check if corresponding "start" phenomenon is given
                 if other_limit is not None:
                     # reverse shadow type flag list
-                    shadow_types = phenomenom_flag.copy()
+                    shadow_types = phenomenon_flag.copy()
                     shadow_types.reverse()
 
                     # try binary search
-                    other_tmng = self.binary_search_find_other_shadow_phenomena(other_limit, self.epoch, shadow_types.index(phenomenom_flag[i]) + 1,
+                    other_tmng = self.binary_search_find_other_shadow_phenomena(other_limit, self.epoch, shadow_types.index(phenomenon_flag[i]) + 1,
                                                                                 shadow_types)
-                    # check whether the binary search was successfull
+                    # check whether the binary search was successful
                     if other_tmng is not None:
                         # add phenomenon to list
-                        other_timings.append(TimingResult(other_tmng.epoch, self.appereance_type, self.row, self.col,
+                        other_timings.append(TimingResult(other_tmng.epoch, self.appearance_type, self.row, self.col,
                                                           self.rough_time_step, other_tmng))
                         phenomenon_found = True
 
                 # fallback to iterative algorithm
                 if other_limit is None or not phenomenon_found:
                     # While shadow type is not reached -> calculate for previous time step
-                    while not cur_phenomenom.shadow_type == phenomenom_flag[i]:
-                        cur_phenomenom = Detection.check_single_phenomena(cur_phenomenom.epoch - time_step,
-                                                                          cur_phenomenom.sat,
-                                                                          cur_phenomenom.phenomenom_type)
-                        # Break if phenomenom start is exceeded
-                        if not cur_phenomenom.phenomenom_occurs:
+                    while not cur_phenomenon.shadow_type == phenomenon_flag[i]:
+                        cur_phenomenon = Detection.check_single_phenomena(cur_phenomenon.epoch - time_step,
+                                                                          cur_phenomenon.sat,
+                                                                          cur_phenomenon.phenomenon_type)
+                        # Break if phenomenon start is exceeded
+                        if not cur_phenomenon.phenomenon_occurs:
                             break
-                    if not cur_phenomenom.phenomenom_occurs:
+                    if not cur_phenomenon.phenomenon_occurs:
                         break
 
-                    # Add Phenomenom to list
+                    # Add Phenomenon to list
                     other_timings.append(
-                        TimingResult(cur_phenomenom.epoch, self.appereance_type, self.row, self.col,
+                        TimingResult(cur_phenomenon.epoch, self.appearance_type, self.row, self.col,
                                      self.rough_time_step,
-                                     Detection.check_single_phenomena(cur_phenomenom.epoch,
-                                                                      cur_phenomenom.sat,
-                                                                      cur_phenomenom.phenomenom_type)))
+                                     Detection.check_single_phenomena(cur_phenomenon.epoch,
+                                                                      cur_phenomenon.sat,
+                                                                      cur_phenomenon.phenomenon_type)))
 
-            # Add self TimingResult - 1 timestep as last appereance of extrem shadow phenomenom to list
-            other_timings.append(TimingResult(self.epoch - time_step, self.appereance_type, self.row, self.col,
+            # Add self TimingResult - 1 timestep as last appearance of extreme shadow phenomenon to list
+            other_timings.append(TimingResult(self.epoch - time_step, self.appearance_type, self.row, self.col,
                                               self.rough_time_step,
                                               Detection.check_single_phenomena(self.epoch - time_step,
-                                                                               self.phenomenom.sat,
-                                                                               self.phenomenom.phenomenom_type)))
+                                                                               self.phenomenon.sat,
+                                                                               self.phenomenon.phenomenon_type)))
 
         return other_timings
 
@@ -223,14 +223,14 @@ class TimingResult(Result):
             of appearance.
 
         :returns: Timing for the searched shadow phenomenon
-        :rtype: TimingResult
+        :rtype: Phenomenon
         """
 
         # termination condition (timestep < 1s)
         if end_epoch - start_epoch > s_jd:
             # calculate phenomenon in the middle
             middle_phenomenon = Detection.check_single_phenomena(Epoch((start_epoch.jde() + end_epoch.jde()) / 2),
-                                                                 self.phenomenom.sat, self.phenomenom.phenomenom_type)
+                                                                 self.phenomenon.sat, self.phenomenon.phenomenon_type)
 
             # shadow phenomenon occurs between start_epoch and middle
             if shadow_types.index(middle_phenomenon.shadow_type) >= shadow_type_index:
@@ -244,15 +244,15 @@ class TimingResult(Result):
         # termination condition met
         else:
             # calculate timings for start and end
-            start_timing = Detection.check_single_phenomena(start_epoch, self.phenomenom.sat,
-                                                            self.phenomenom.phenomenom_type)
-            end_timing = Detection.check_single_phenomena(end_epoch, self.phenomenom.sat,
-                                                          self.phenomenom.phenomenom_type)
+            start_timing = Detection.check_single_phenomena(start_epoch, self.phenomenon.sat,
+                                                            self.phenomenon.phenomenon_type)
+            end_timing = Detection.check_single_phenomena(end_epoch, self.phenomenon.sat,
+                                                          self.phenomenon.phenomenon_type)
 
             # Check whether an change of shadow phenomena occurs
             if start_timing.shadow_type != end_timing.shadow_type:
                 # switch returned timing according to
-                if self.appereance_type == "end":
+                if self.appearance_type == "end":
                     return start_timing
                 return end_timing
 
@@ -270,12 +270,12 @@ class TimingResult(Result):
         """
         jr_au = 2092.512039
 
-        if self.phenomenom.phenomenom_type in ["EC", "OM"] and self.is_time_corrected is False:
+        if self.phenomenon.phenomenon_type in ["EC", "OM"] and self.is_time_corrected is False:
             # Compute Distance Jupiter - Earth and Coordinates of Jupiter
             dist = JupiterMoons.calculate_DELTA(self.epoch)
 
             # DELTA - r_jupiter
-            correction_term_au = dist[0] + self.phenomenom.z / jr_au - dist[4]
+            correction_term_au = dist[0] + self.phenomenon.z / jr_au - dist[4]
 
             # Light time delay for the distance
             time_correction = correction_term_au * 149597870700 / 299792458  # (150*(10**9))/(3*(10**8))
@@ -286,7 +286,7 @@ class TimingResult(Result):
             self.epoch = self.epoch + time_correction_jd
             self.is_time_corrected = True
         elif self.is_time_corrected is False:
-            correction_term_au = self.phenomenom.z / jr_au
+            correction_term_au = self.phenomenon.z / jr_au
 
             # Light time delay for the distance
             time_correction = correction_term_au * 149597870700 / 299792458  # (150*(10**9))/(3*(10**8))
@@ -502,7 +502,7 @@ class Calculation:
                 self.timing_lists[row][col].extend(self.find_phenomena(self.distances[row][col], row, col, tol))
         print("Got rough timings")
 
-        # Set up Queue for comunication between Processes
+        # Set up Queue for communication between Processes
         queue_bs = multiprocessing.Queue()
         # List for processes
         procs = []
@@ -555,7 +555,7 @@ class Calculation:
 
         for i in range(len(extreme_timings)):
             # Update Phenomena for exact epochs
-            extreme_timings[i].phenomenom.update(extreme_timings[i].epoch)
+            extreme_timings[i].phenomenon.update(extreme_timings[i].epoch)
 
         # Set up multiprocessing for finding other shadow phenomena
         # Count of processes double the cpu core count to better distribute work
@@ -563,7 +563,7 @@ class Calculation:
         proc_count = self.cpu_core_count * 2
         calcs_per_core = floor(len(extreme_timings) / proc_count)
 
-        # Set up Queue for comunication between Processes
+        # Set up Queue for communication between Processes
         queue_sst = multiprocessing.Queue()
         # List for processes
         procs = []
@@ -639,16 +639,16 @@ class Calculation:
             timing = timing_list[i]
             other_limit = None
 
-            if timing.appereance_type == "start":
+            if timing.appearance_type == "start":
                 for j in range(i + 1, len(timing_list)):
                     comp_timing = timing_list[j]
-                    if comp_timing.col == timing.col and comp_timing.row == timing.row and comp_timing.appereance_type == "end":
+                    if comp_timing.col == timing.col and comp_timing.row == timing.row and comp_timing.appearance_type == "end":
                         other_limit = comp_timing.epoch
                         break
             else:
                 for j in range(i - 1, -1, -1):
                     comp_timing = timing_list[j]
-                    if comp_timing.col == timing.col and comp_timing.row == timing.row and comp_timing.appereance_type == "start":
+                    if comp_timing.col == timing.col and comp_timing.row == timing.row and comp_timing.appearance_type == "start":
                         other_limit = comp_timing.epoch
                         break
 
@@ -660,7 +660,7 @@ class Calculation:
     @staticmethod
     def mp_calculate_position(queue: multiprocessing.Queue, start_epoch: Epoch, end_epoch: Epoch,
                               time_step: float):
-        """Method that handels a multiprocessing task for calculating coordinates
+        """Method that handles a multiprocessing task for calculating coordinates
         for Epochs in the given timespan with given time step. The results will
         be written to the queue.
 
@@ -680,7 +680,7 @@ class Calculation:
         queue.put(Calculation.make_calculation(start_epoch, end_epoch, time_step))
 
     def mp_binarysearch(self, queue: multiprocessing.Queue, timing_list: list, row: int, col: int) -> None:
-        """Method that handels task (binary search to find exact timings)
+        """Method that handles task (binary search to find exact timings)
         of one process in order to implement multiprocessing to use multiple
         CPU cores for the calculation.
 
@@ -704,13 +704,13 @@ class Calculation:
             timing: TimingResult = timing_list[i]
             # Calculate and write exact timing together with former content and array coordinates
             timing.epoch = self.find_start_end_cons_tol(self.calc_res[timing.rough_time_step].epoch, self.time_step,
-                                                        row, col, timing.appereance_type, self.tol)
+                                                        row, col, timing.appearance_type, self.tol)
             result.append(timing)
 
         # Add result to Queue
         queue.put(result)
 
-        print("Exact timings for Satellite ", row + 1, ", phenomenom: ", col, " calculated")
+        print("Exact timings for Satellite ", row + 1, ", phenomenon: ", col, " calculated")
 
     @staticmethod
     def make_calculation(start_epoch: Epoch, end_epoch: Epoch, time_step: float) -> List[CalculationResult]:
@@ -747,7 +747,7 @@ class Calculation:
     def list_distances(self) -> None:
         """Fills distances list with respect to the CalculationResults
         stored in calc_res. This method rearranges the data to be able
-        to see the course of the coordinates over time in a seperate
+        to see the course of the coordinates over time in a separate
         list in the distances array.
 
         :rtype: None
@@ -767,7 +767,7 @@ class Calculation:
                     # Fill distance list
                     self.distances[row][col].append(ele.dist_matrix[row][col])
 
-    def find_phenomena(self, distance_list: List[Phenomenom], row: int, col: int, tol: float = 0.0) \
+    def find_phenomena(self, distance_list: List[Phenomenon], row: int, col: int, tol: float = 0.0) \
             -> List[TimingResult]:
         """This method finds rough timings of start and end of phenomena
         for a given course of distances.
@@ -781,7 +781,7 @@ class Calculation:
         :param tol: Tolerance for detecting phenomena (Jupiter's radii)
         :type tol: float
 
-        :returns: List of Tuples with time step of first appereance and
+        :returns: List of Tuples with time step of first appearance and
             type of timing ("start" or "end") of a phenomena
         :rtype: List[Tuple[int, str]]
         """
@@ -839,16 +839,16 @@ class Calculation:
         return res
 
     @staticmethod
-    def find_start_end_cons_tol(first_appereance: Epoch, time_step: float, row: int, col: int, appereance_type: str,
+    def find_start_end_cons_tol(first_appearance: Epoch, time_step: float, row: int, col: int, appearance_type: str,
                                 tol: float = 0.0) -> Epoch:
         """This method implements binary search for finding
         exact Epochs for given rough timings of phenomena. It changes
         behavior considering whether there was a tolerance for finding rough
         timings.
 
-        :param first_appereance: Rough Epoch the phenomenom (start or
+        :param first_appearance: Rough Epoch the phenomenon (start or
             end) first appeared
-        :type first_appereance: float
+        :type first_appearance: float
         :param time_step: Time step the calculation was done
         :type time_step: float
         :param row: Corresponding row in the timing_lists array (i.e.
@@ -857,76 +857,76 @@ class Calculation:
         :param col: Corresponding column in the timing_lists array (i.e.
             col = 0: Ocultation, col = 1: Eclipse, col = 2: Penumbra)
         :type col: int
-        :param appereance_type: Which type of appereance was detected
+        :param appearance_type: Which type of appearance was detected
             ("start" or "end")
-        :type appereance_type: str
+        :type appearance_type: str
         :param tol: Tolerance for finding rough timings
         :type tol: float
 
-        :returns: Exact Epoch for begin or end of the phenomenom
+        :returns: Exact Epoch for begin or end of the phenomenon
         :rtype: Epoch
 
-        :raises: ValueError, if appereance_type is invalid
+        :raises: ValueError, if appearance_type is invalid
         """
 
         if tol == 0.0:
             # Regular behavior if no tolerance
-            return Calculation.find_start_end(first_appereance, time_step, row, col, appereance_type)
+            return Calculation.find_start_end(first_appearance, time_step, row, col, appearance_type)
         else:
-            # Safe search time step to find when the phenomenom really occurs
+            # Safe search time step to find when the phenomenon really occurs
             search_time_step = 60 * 60 * s_jd
 
-            # Condition for phenomenom start
-            if appereance_type == "start":
-                # If there is a phenomenom in the given time step
-                if Detection.check_phenomena(first_appereance)[row][col].phenomenom_occurs and not \
-                        Detection.check_phenomena(first_appereance - time_step)[row][col].phenomenom_occurs:
-                    return Calculation.find_start_end(first_appereance, time_step, row, col, appereance_type)
+            # Condition for phenomenon start
+            if appearance_type == "start":
+                # If there is a phenomenon in the given time step
+                if Detection.check_phenomena(first_appearance)[row][col].phenomenon_occurs and not \
+                        Detection.check_phenomena(first_appearance - time_step)[row][col].phenomenon_occurs:
+                    return Calculation.find_start_end(first_appearance, time_step, row, col, appearance_type)
 
-                cur_epoch = first_appereance
+                cur_epoch = first_appearance
 
-                # Whether there is an phenomenom at the end of the first appereance time step
-                is_phenomena_end = Detection.check_phenomena(cur_epoch)[row][col].phenomenom_occurs
+                # Whether there is an phenomenon at the end of the first appearance time step
+                is_phenomena_end = Detection.check_phenomena(cur_epoch)[row][col].phenomenon_occurs
 
-                # Move time step until there is a phenomenom
+                # Move time step until there is a phenomenon
                 while not is_phenomena_end:
                     cur_epoch += search_time_step
-                    is_phenomena_end = Detection.check_phenomena(cur_epoch)[row][col].phenomenom_occurs
+                    is_phenomena_end = Detection.check_phenomena(cur_epoch)[row][col].phenomenon_occurs
 
-                return Calculation.find_start_end(cur_epoch, search_time_step, row, col, appereance_type)
+                return Calculation.find_start_end(cur_epoch, search_time_step, row, col, appearance_type)
 
-            # Condition for phenomenom end
-            elif appereance_type == "end":
-                # If there is a phenomenom in the given time step
-                if not Detection.check_phenomena(first_appereance)[row][col].phenomenom_occurs and \
-                        Detection.check_phenomena(first_appereance - time_step)[row][col].phenomenom_occurs:
-                    return Calculation.find_start_end(first_appereance, time_step, row, col, appereance_type)
+            # Condition for phenomenon end
+            elif appearance_type == "end":
+                # If there is a phenomenon in the given time step
+                if not Detection.check_phenomena(first_appearance)[row][col].phenomenon_occurs and \
+                        Detection.check_phenomena(first_appearance - time_step)[row][col].phenomenon_occurs:
+                    return Calculation.find_start_end(first_appearance, time_step, row, col, appearance_type)
 
-                cur_epoch = first_appereance - time_step
+                cur_epoch = first_appearance - time_step
 
-                # Whether there is an phenomenom at the start of the first appereance time step
-                is_phenomena_start = Detection.check_phenomena(cur_epoch)[row][col].phenomenom_occurs
+                # Whether there is an phenomenon at the start of the first appearance time step
+                is_phenomena_start = Detection.check_phenomena(cur_epoch)[row][col].phenomenon_occurs
 
-                # Move time step until there is a phenomenom
+                # Move time step until there is a phenomenon
                 while not is_phenomena_start:
                     cur_epoch -= search_time_step
-                    is_phenomena_start = Detection.check_phenomena(cur_epoch)[row][col].phenomenom_occurs
+                    is_phenomena_start = Detection.check_phenomena(cur_epoch)[row][col].phenomenon_occurs
 
                 return Calculation.find_start_end(cur_epoch + search_time_step, search_time_step, row, col,
-                                                  appereance_type)
+                                                  appearance_type)
 
             # Input string invalid
             else:
                 raise ValueError("Input string invalid")
 
     @staticmethod
-    def find_start_end(first_appereance: Epoch, time_step: float, row: int, col: int, appereance_type: str) -> Epoch:
+    def find_start_end(first_appearance: Epoch, time_step: float, row: int, col: int, appearance_type: str) -> Epoch:
         """ This recursive method implements binary search for finding
         exact Epochs for given rough timings of phenomena
 
-        :param first_appereance: Rough Epoch the phenomenom (start or
+        :param first_appearance: Rough Epoch the phenomenon (start or
             end) first appeared
-        :type first_appereance: float
+        :type first_appearance: float
         :param time_step: Time step the calculation was done
         :type time_step: float
         :param row: Corresponding row in the timing_lists array (i.e.
@@ -935,51 +935,51 @@ class Calculation:
         :param col: Corresponding column in the timing_lists array (i.e.
             col = 0: Ocultation, col = 1: Eclipse, col = 2: Penumbra)
         :type col: int
-        :param appereance_type: Which type of appereance was detected
+        :param appearance_type: Which type of appearance was detected
             ("start" or "end")
-        :type appereance_type: str
+        :type appearance_type: str
 
-        :returns: Exact Epoch for begin or end of the phenomenom
+        :returns: Exact Epoch for begin or end of the phenomenon
         :rtype: Epoch
 
-        :raises ValueError, if appeareanceType is neither "start"
-            nor "end", or no phenomenom was detected for the given
+        :raises ValueError, if appearance Type is neither "start"
+            nor "end", or no phenomenon was detected for the given
             inputs
         """
 
         # Termination condition, if time_step (accuracy) is below 1 second
         if time_step >= s_jd:
             # Calculate half time step before
-            iteration_between = first_appereance - time_step / 2
+            iteration_between = first_appearance - time_step / 2
 
-            # Condition for start of phenomenom
-            if appereance_type == "start":
-                # Whether phenomenom was already True a half time step ago
-                if Detection.check_phenomena(iteration_between)[row][col].phenomenom_occurs is True:
+            # Condition for start of phenomenon
+            if appearance_type == "start":
+                # Whether phenomenon was already True a half time step ago
+                if Detection.check_phenomena(iteration_between)[row][col].phenomenon_occurs is True:
                     # Find exact Epoch between iteration_between and iteration_between - time_step / 2
-                    return Calculation.find_start_end(iteration_between, time_step / 2, row, col, appereance_type)
+                    return Calculation.find_start_end(iteration_between, time_step / 2, row, col, appearance_type)
                 else:
-                    # Find exact Epoch between first_appereance and first_appereance - time_step / 2
-                    return Calculation.find_start_end(first_appereance, time_step / 2, row, col, appereance_type)
-            # Condition for end of phenomenom
-            elif appereance_type == "end":
-                # Whether phenomenom was False a half time step ago
-                if Detection.check_phenomena(iteration_between)[row][col].phenomenom_occurs is False:
+                    # Find exact Epoch between first_appearance and first_appearance - time_step / 2
+                    return Calculation.find_start_end(first_appearance, time_step / 2, row, col, appearance_type)
+            # Condition for end of phenomenon
+            elif appearance_type == "end":
+                # Whether phenomenon was False a half time step ago
+                if Detection.check_phenomena(iteration_between)[row][col].phenomenon_occurs is False:
                     # Find exact Epoch between iteration_between and iteration_between - time_step / 2
-                    return Calculation.find_start_end(iteration_between, time_step / 2, row, col, appereance_type)
+                    return Calculation.find_start_end(iteration_between, time_step / 2, row, col, appearance_type)
                 else:
-                    # Find exact Epoch between first_appereance and first_appereance - time_step / 2
-                    return Calculation.find_start_end(first_appereance, time_step / 2, row, col, appereance_type)
+                    # Find exact Epoch between first_appearance and first_appearance - time_step / 2
+                    return Calculation.find_start_end(first_appearance, time_step / 2, row, col, appearance_type)
             # Input string invalid
             else:
                 raise ValueError("Input string invalid")
         # Termination condition met
         else:
-            # Check if there really is a phenomenom
-            if Detection.check_phenomena(first_appereance - time_step)[row][col].phenomenom_occurs is \
-                    Detection.check_phenomena(first_appereance + time_step)[row][col].phenomenom_occurs:
-                raise ValueError("No phenomenom detected")
-            return first_appereance
+            # Check if there really is a phenomenon
+            if Detection.check_phenomena(first_appearance - time_step)[row][col].phenomenon_occurs is \
+                    Detection.check_phenomena(first_appearance + time_step)[row][col].phenomenon_occurs:
+                raise ValueError("No phenomenon detected")
+            return first_appearance
 
     def _cut_to_timespan(self, timing_list: List[TimingResult]) -> List[TimingResult]:
         """Private method to remove content from a given list that is beyond
@@ -1024,8 +1024,8 @@ if __name__ == "__main__":
     print()
 
     for tmng in calc.all_timings_sorted:
-        print(tmng.epoch.get_full_date(), tmng.row, tmng.phenomenom.phenomenom_type, tmng.appereance_type,
-              tmng.phenomenom.shadow_type)
+        print(tmng.epoch.get_full_date(), tmng.row, tmng.phenomenon.phenomenon_type, tmng.appearance_type,
+              tmng.phenomenon.shadow_type)
 
     print()
 

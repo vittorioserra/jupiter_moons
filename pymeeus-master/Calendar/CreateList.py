@@ -180,12 +180,12 @@ class CreateList(object):
             epoch = calc.all_timings_sorted[pos].epoch
             year, month, day = epoch.get_date()
             row = calc.all_timings_sorted[pos].row
-            type1 = calc.all_timings_sorted[pos].phenomenom.phenomenom_type
-            if calc.all_timings_sorted[pos].appereance_type == 'start':
+            type1 = calc.all_timings_sorted[pos].phenomenon.phenomenon_type
+            if calc.all_timings_sorted[pos].appearance_type == 'start':
                 type2 = "D"
             else:
                 type2 = "F"
-            type3 = calc.all_timings_sorted[pos].phenomenom.shadow_type
+            type3 = calc.all_timings_sorted[pos].phenomenon.shadow_type
             if previous_month != month:
                 previous_month = month
                 if row_counter < 76 and month != 1:
