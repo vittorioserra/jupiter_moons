@@ -1,7 +1,7 @@
 from typing import TextIO, List, Any
 
 from Calendar.Calculation import Calculation
-from pymeeus.Epoch import Epoch
+from pymeeus_optimized.Epoch import Epoch
 
 
 class CreateList(object):
