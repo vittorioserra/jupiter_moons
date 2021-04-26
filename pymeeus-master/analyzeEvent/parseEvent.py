@@ -42,9 +42,13 @@ class ParseEvent(object):
 
                 if elements[4] > 0:
                     # row contains event data for a satellite
-
-                    date = datetime(self.year, self.month, elements[0], elements[1], elements[2], elements[3]).strftime(
+                    try :
+                    	date = datetime(self.year, self.month, elements[0], elements[1], elements[2], elements[3]).strftime(
                         '%Y-%m-%d %H:%M:%S')
+                    except ValueError :
+                        break 
+
+
                     types = elements[5].split('.')
 
                     add = ("INSERT INTO Event "
@@ -170,7 +174,10 @@ class ParseEvent(object):
 
         # transfer day from previous page if needed
         if self.table[0][0] == 0:
+            #try : 
             self.table[0][0] = self.dayFoundLastPage
+            #except AttributeError :
+                #return
         # save self.dayFound from this page for usage in next page
         self.dayFoundLastPage = self.dayFound
 
@@ -303,4 +310,10 @@ class ParseEvent(object):
 if __name__ == "__main__":
     # first argument is filename of data to be imported (to be parsed) into SQLite database named Event.sqlite
     # set second argument to "Thuillot" if Thiullot data is imported, set to "PyMeeus" if PyMeeus data is imported
-    ParseEvent("jupiterConfigPyMeeus-21.txt", "PyMeeus")
+    ParseEvent("jupiterConfig-21.txt", "Thuillot")
+    ParseEvent("jupiterConfig-20.txt", "Thuillot")
+    ParseEvent("jupiterConfig-19.txt", "Thuillot")
+    ParseEvent("jupiterConfig-18.txt", "Thuillot")
+    ParseEvent("jupiterConfig-17.txt", "Thuillot")
+    ParseEvent("jupiterConfig-16.txt", "Thuillot")
+    #ParseEvent("jupiterConfig-15.txt", "Thuillot")
