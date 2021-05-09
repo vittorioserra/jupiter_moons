@@ -172,12 +172,16 @@ class ParseEvent(object):
                     self.table[row - 1][2 * 6:3 * 6] = self.table[row - 1][1 * 6:2 * 6]
                     self.table[row - 1][1 * 6:2 * 6] = [0, 0, 0, 0, 0, '']
 
+
         # transfer day from previous page if needed
         if self.table[0][0] == 0:
-            #try : 
-            self.table[0][0] = self.dayFoundLastPage
-            #except AttributeError :
-                #return
+            try :
+                self.table[0][0] = self.dayFoundLastPage
+                self.dayFoundLastPage = self.dayFound
+            except AttributeError :
+                self.dayFound = 1
+                return
+
         # save self.dayFound from this page for usage in next page
         self.dayFoundLastPage = self.dayFound
 
@@ -310,10 +314,10 @@ class ParseEvent(object):
 if __name__ == "__main__":
     # first argument is filename of data to be imported (to be parsed) into SQLite database named Event.sqlite
     # set second argument to "Thuillot" if Thiullot data is imported, set to "PyMeeus" if PyMeeus data is imported
-    ParseEvent("jupiterConfig-21.txt", "Thuillot")
-    ParseEvent("jupiterConfig-20.txt", "Thuillot")
-    ParseEvent("jupiterConfig-19.txt", "Thuillot")
-    ParseEvent("jupiterConfig-18.txt", "Thuillot")
-    ParseEvent("jupiterConfig-17.txt", "Thuillot")
-    ParseEvent("jupiterConfig-16.txt", "Thuillot")
-    #ParseEvent("jupiterConfig-15.txt", "Thuillot")
+    #ParseEvent("jupiterConfig-21.txt", "Thuillot")
+    #ParseEvent("jupiterConfig-20.txt", "Thuillot")
+    #ParseEvent("jupiterConfig-19.txt", "Thuillot")
+    #ParseEvent("jupiterConfig-18.txt", "Thuillot")
+    #ParseEvent("jupiterConfig-17.txt", "Thuillot")
+    #ParseEvent("jupiterConfig-16.txt", "Thuillot")
+    ParseEvent("jupiterConfig-15.txt", "Thuillot")
