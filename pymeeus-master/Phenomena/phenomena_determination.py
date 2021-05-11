@@ -138,7 +138,7 @@ class Phenomena(object):
 
             epoch += time_step
 
-            position_matrix = (np.array(JupiterMoons.rectangular_positions(epoch, solar=True))).reshape(4, 3)
+            position_matrix = (np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=True))).reshape(4, 3)
 
             position_matrix[:, 1] = position_matrix[:, 1] * 1.071347
 
@@ -222,7 +222,7 @@ class Phenomena(object):
 
                 # now consider earth based phenomena
 
-                position_matrix_eb = (np.array(JupiterMoons.rectangular_positions(epoch, solar=False))).reshape(4, 3)
+                position_matrix_eb = (np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=False))).reshape(4, 3)
 
                 position_matrix_eb[:, 1] = position_matrix_eb[:, 1] * 1.071347
 
@@ -297,15 +297,19 @@ class Phenomena(object):
 
         time_offset_matrix = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 
-        moons_radii = np.array(
-            [[3643.2 / (2 * 69911), 3121.6 / (2 * 69911), 5262.4 / (2 * 69911), 4820.6 / (2 * 69911)], [0, 0, 0, 0],
-             [0, 0, 0, 0]])
+        moons_radii = np.array([[1821/71492, 1565/71492, 2634/71492, 2403/71492], [0, 0, 0, 0], [0, 0, 0, 0]])
+
+
+                #np.array(
+                #[[3643.2 / (2 * 69911), 3121.6 / (2 * 69911), 5262.4 / (2 * 69911), 4820.6 / (2 * 69911)], [0, 0, 0, 0],
+                 #[0, 0, 0, 0]])
+
 
         for i in range(time_span):
 
             epoch += time_step
 
-            position_matrix = (np.array(JupiterMoons.rectangular_positions(epoch, solar=True))).reshape(4, 3)
+            position_matrix = (np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=True))).reshape(4, 3)
 
             position_matrix += moons_radii.T
 
@@ -391,7 +395,7 @@ class Phenomena(object):
 
                 # now consider earth based phenomena
 
-                position_matrix_eb = (np.array(JupiterMoons.rectangular_positions(epoch, solar=False))).reshape(4, 3)
+                position_matrix_eb = (np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=False))).reshape(4, 3)
 
                 position_matrix_eb += moons_radii.T
 
@@ -470,16 +474,16 @@ class Phenomena(object):
         time_offset_matrix = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 
         moons_radii = np.array(
-            [[3643.2 / (2 * 69911), 3121.6 / (2 * 69911), 5262.4 / (2 * 69911), 4820.6 / (2 * 69911)], [0, 0, 0, 0],
+            [[1821/71492, 1565/71492, 2634/71492, 2403/71492], [0, 0, 0, 0],
              [0, 0, 0, 0]])
 
         for i in range(time_span):
 
             epoch += time_step
 
-            position_matrix = (np.array(JupiterMoons.rectangular_positions(epoch, solar=True))).reshape(4, 3)
+            position_matrix = (np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=True))).reshape(4, 3)
 
-            position_matrix += moons_radii.T
+            #position_matrix += moons_radii.T
 
             position_matrix[:, 1] = position_matrix[:, 1] * 1.071347
 
@@ -563,7 +567,7 @@ class Phenomena(object):
 
                 # now consider earth based phenomena
 
-                position_matrix_eb = (np.array(JupiterMoons.rectangular_positions(epoch, solar=False))).reshape(4, 3)
+                position_matrix_eb = (np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=False))).reshape(4, 3)
 
                 position_matrix_eb += moons_radii.T
 

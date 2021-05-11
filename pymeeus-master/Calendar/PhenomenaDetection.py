@@ -282,7 +282,7 @@ class Detection:
             raise TypeError("Invalid input type")
 
         # Calc perspective coordinates of the satellites depending on phenomenom type
-        Coords = JupiterMoons.rectangular_positions(epoch, solar=phenomenom_type in ["EC", "OM"])
+        Coords = JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=phenomenom_type in ["EC", "OM"])
 
         # Earth based phenomena
         if phenomenom_type in ["PA", "OC"]:
@@ -336,9 +336,9 @@ class Detection:
                                                  [None, None, None, None]]
 
         # Calculate coordinates as seen from the Earth
-        Coords_Earth = JupiterMoons.rectangular_positions(epoch)
+        Coords_Earth = JupiterMoons.rectangular_positions_jovian_equatorial(epoch)
         # Calculate coordinates as seen from the Sun
-        Coords_Sun = JupiterMoons.rectangular_positions(epoch, solar=True)
+        Coords_Sun = JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=True)
 
         # Iterate through satellites
         for i_sat in range(0, 4):
