@@ -19,7 +19,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from math import sin, cos, sqrt, atan, atan2, radians
+from math import sin, cos, sqrt, atan, atan2, acos, radians
 
 from pymeeus.Epoch import Epoch
 from pymeeus.Jupiter import Jupiter
@@ -632,7 +632,7 @@ class JupiterMoons(object):
         :param Z: Z-coordinate of the satellite in Jupiter radii
         :type Z: float
         :param OMEGA: longitude of the node of Jupiter
-        :type OMEGA: float
+        :type OMEGA: floatrotat
         :param psi: longitude of the node of Jupiter
         :type psi: float
         :param i: inclination on the plane of the ecliptic
@@ -735,6 +735,52 @@ class JupiterMoons(object):
             Z = B_6
 
             return X, Y, Z
+
+    @staticmethod
+    def rotational_axis_angles(epoch):
+        """This method computes the two angles carachterizing the potition of
+        jupiter's rotational axis to the jovian ecliptic plane
+
+
+        :param epoch: Epoch to compute satellite position, as an Epoch object
+        :type epoch: :py:class:`Epoch`
+
+
+        :returns: A tuple with the two angels for the inclination of the jovian
+        rotational axis thowars it's ecliptic
+        :rtype: tuple, float
+        :raises: TypeError if input values are wrong type
+
+        """
+
+        #jovian north pole
+        X = 0
+        Y = 0
+        Z = 1
+
+        # Checking for type
+        if not isinstance(epoch, Epoch):
+            raise TypeError("Invalid input types")
+
+        # Time in centuries since 1900.0
+        time_JC_1900 = (epoch.jde() - 2415020.50000) / \
+                       36525  # leave out final .5
+
+        # Inclination of Jupiter's orbit with respect to the orbital plane
+        Inc = 3.120262 + 0.0006 * time_JC_1900
+
+        # Rotate towards Jupiter's orbital plane
+        A = X
+        B = Y * cos(radians(Inc)) - Z * sin(radians(Inc))
+        C = Y * sin(radians(Inc)) + Z * cos(radians(Inc))
+
+        r = 1
+
+        theta = acos(C/r)
+        phi = atan(B/A)
+
+
+        return phi, theta
 
     @staticmethod
     def calculate_DELTA(epoch):
