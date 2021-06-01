@@ -2,9 +2,14 @@ import functools
 from enum import unique, IntEnum
 from typing import List
 
-from pymeeus_optimized.Epoch import Epoch
-from pymeeus_optimized.Jupiter import Jupiter
-from pymeeus_optimized.JupiterMoons import JupiterMoons
+from pymeeus.Epoch import Epoch
+from pymeeus.Jupiter import Jupiter
+from pymeeus.JupiterMoons import JupiterMoons
+from pymeeus.Earth import Earth
+from pymeeus.Coordinates import mean_obliquity
+import numpy as np
+from numpy import sin, cos, sqrt, deg2rad, tan, arctan2, arcsin
+
 
 from math import atan, tan, sqrt
 
@@ -381,6 +386,164 @@ class Detection:
         return r_umbra, r_penumbra
 
     @staticmethod
+    def planetocentric_declinations_rad(epoch):
+        d = epoch - 2433282.5
+        T1 = d.jde() / 36525
+
+        alpha_0 = np.deg2rad(268 + 0.1061 * T1)
+        delta_0 = np.deg2rad(64.50 - 0.0164 * T1)
+
+        l, b, r = Jupiter.geometric_heliocentric_position(epoch, tofk5=False)
+
+        l = l.rad()
+        b = b.rad()
+
+        # Compute the heliocentric position of the Earth
+        l0, b0, r0 = Earth.geometric_heliocentric_position(epoch, tofk5=False)
+
+        l0 = l0.rad()
+        b0 = b0.rad()
+
+        # jupiter's data
+        x = r * np.cos(b) * np.cos(l) - r * cos(l0)
+        y = r * np.cos(b) * np.sin(l) - r * sin(l0)
+        z = r * np.sin(b) - r * cos(b0)
+
+        Delta = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+
+        l_corr_factor_deg = -0.012990 * Delta / r ** 2
+
+        l_corr_factor_rad = np.deg2rad(l_corr_factor_deg)
+
+        l = l + l_corr_factor_rad
+
+        # calculate x, y, z and Delta anew
+
+        x = r * np.cos(b) * np.cos(l) - r0 * cos(l0)
+        y = r * np.cos(b) * np.sin(l) - r0 * sin(l0)
+        z = r * np.sin(b) - r0 * sin(b0)
+
+        Delta = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+
+        epsilon_0 = (mean_obliquity(epoch)).rad()
+
+        alpha_s = np.arctan2((np.cos(epsilon_0) * np.sin(l) - np.sin(epsilon_0) * np.tan(b)), np.cos(l))
+        delta_s = np.arcsin(cos(epsilon_0) * sin(b) + sin(epsilon_0) * cos(b) * sin(l))
+
+        D_s = -sin(delta_0) * sin(delta_s) - cos(delta_0) * cos(delta_s) * cos(alpha_0 - alpha_s)
+
+        u = y * cos(epsilon_0) - z * sin(epsilon_0)
+        v = y * sin(epsilon_0) + z * cos(epsilon_0)
+
+        alpha = arctan2(u, x)
+        delta = arctan2(v, sqrt(x ** 2 + u ** 2))
+        chsi = arctan2(sin(delta_0) * cos(delta) * cos(alpha_0 - alpha) - sin(delta) * cos(delta_0),
+                       cos(delta) * sin(alpha_0 - alpha))
+
+        D_e = -sin(delta_0) * sin(delta) - cos(delta_0) * cos(delta) * cos(alpha_0 - alpha)
+
+        return D_s, D_e
+
+
+    @staticmethod
+    def ellipse_base_cone_param(epoch: Epoch, ellipsoid: bool = True):
+        """This method constructs a cone modelling jupiter's shadow, thus here we are considering the rotated ellipsoidal
+        shape of jupiter
+
+        :param epoch: Epoch that should be checked
+        :type epoch: Epoch
+        :param ellipsoid: Whether or not to distort jupiter and the cone
+            concurrently
+        :type ellipsoid: bool
+
+        :returns:
+            alpha_cone_rad : aperture of the cone in radians measured from
+                the base,
+            cone_vertex_jupiter_radii : distance of the umbral cone's sharpest
+                point in jupiter-radii, always behind jupiter if viewed
+                from the sun,
+            beta_cone_rad : aperture of the penumbral cone in radians measured
+                from jupiter,
+            cone_beta_vertex_jupiter_radii : distance of the penumbral cone's
+                sharpest point in jupiter-radii, always before jupiter if
+                viewed from the sun
+        :rtype: tuple
+
+        :raises: TypeError, if input parameter has invalid type
+        """
+
+        #compute the angles
+        D_s, D_e = planetocentric_declinations_rad(epoch)
+
+        # Define radii of sun and Jupiter in AU
+        sun_radius_au = 0.00465047
+        jupiter_radius_au = 0.10045 * sun_radius_au
+
+        if ellipsoid:
+            jupiter_radius_multiplier = 1.071374
+        else:
+            jupiter_radius_multiplier = 1.0
+
+        jupiter_radius_au = jupiter_radius_au * 1.071374
+
+        # Check if Epoch is given
+        if epoch is not None:
+            # Check types
+            if isinstance(epoch, Epoch):
+                # Calculate the position of jupiter in solar-spherical coordinates
+                l, b, r = Jupiter.geometric_heliocentric_position(epoch)
+
+                # alpha is the umbra defining angle
+                alpha_cone_rad_equatorial = atan(r / (sun_radius_au - jupiter_radius_au))
+                alpha_cone_rad_polar = atan(r / (sun_radius_au - jupiter_radius_au*np.cos(D_s)))
+
+                # beta is the penumbra defying angle
+                beta_cone_rad_equatorial = atan(r / (sun_radius_au + jupiter_radius_au))
+                beta_cone_rad_polar = atan(r / (sun_radius_au + jupiter_radius_au*np.cos(D_s)))
+
+                # Compute distance of the sharpest pint behind jupiter in jupiter radii
+                cone_vertex_jupiter_radii_equatorial = tan(alpha_cone_rad_equatorial)
+                cone_vertex_jupiter_radii_polar = tan(alpha_cone_rad_polar)
+
+                cone_beta_vertex_jupiter_radii_equatorial = (-1 * jupiter_radius_multiplier * tan(beta_cone_rad_equatorial))
+                cone_beta_vertex_jupiter_radii_polar = (-1 * jupiter_radius_multiplier * tan(beta_cone_rad_polar))
+
+                return [alpha_cone_rad_equatorial,alpha_cone_rad_polar], \
+                       [cone_vertex_jupiter_radii_equatorial, cone_vertex_jupiter_radii_polar], \
+                       [beta_cone_rad_equatorial, beta_cone_rad_polar],\
+                       [cone_beta_vertex_jupiter_radii_equatorial, cone_beta_vertex_jupiter_radii_polar]
+
+            else:
+                raise TypeError("Invalid input type")
+
+    @staticmethod
+    def elliptical_cone_radius(epoch: Epoch, z: float):
+        """Calculates the radius of umbra and penumbra shadow for
+        a given z-Coordinate (z > 0 -> more distant than Jupiter)
+
+        :param epoch: Epoch the calculation should be made for
+        :type epoch: Epoch
+        :param z: Z-Coordinate in Jupiter's radii
+        :type z: float
+
+        :returns: Radius of umbra and penumbra shadow in Jupiter's
+            radii
+        """
+        # compute the angles
+
+        alpha_cone_rad,cone_alpha_vertex,beta_cone_rad , cone_beta_vertex = Detection.ellipse_base_cone_param(epoch)
+
+        r_umbra_equatorial = (abs(cone_alpha_vertex[0]) - z) / abs(cone_alpha_vertex[0])
+        r_umbra_polar = (abs(cone_alpha_vertex[1]) - z) / abs(cone_alpha_vertex[1])
+        r_penumbra_equatorial = (abs(cone_beta_vertex[0]) + z) / abs(cone_beta_vertex[0])
+        r_penumbra_polar = (abs(cone_beta_vertex[1]) + z) / abs(cone_beta_vertex[1])
+
+        r_umbra =[r_umbra_equatorial, r_umbra_polar]
+        r_penumbra = [r_penumbra_polar, r_penumbra_equatorial]
+
+        return r_umbra, r_penumbra
+
+    @staticmethod
     def round_base_cone_param(epoch: Epoch, ellipsoid: bool = True):
         """This method constructs a cone modelling jupiter's shadow
 
@@ -437,6 +600,7 @@ class Detection:
                 return alpha_cone_rad, cone_vertex_jupiter_radii, beta_cone_rad, cone_beta_vertex_jupiter_radii
             else:
                 raise TypeError("Invalid input type")
+
 
 
 if __name__ == "__main__":

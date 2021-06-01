@@ -5,6 +5,8 @@ from pymeeus.JupiterMoons import JupiterMoons
 from pymeeus.Jupiter import Jupiter
 from pymeeus.Earth import Earth
 
+from planetocentric_declinations import *
+
 import numpy as np
 
 class Phenomena(object):
@@ -102,6 +104,63 @@ class Phenomena(object):
         print("t_corretto: \t" + str(t_corrected.get_full_date()))
 
         return t_corrected
+    def ellipse_base_cone_param(epoch, ellipsoid=False):
+        """This method constructs a cone modelling jupiter's shadow, this cone takes the planetocentric declinations
+        into accpount
+
+        :param epoch: Epoch that should be checked
+        :type epoch: :py:class:`Epoch`
+        :param ellipsoid: weather or not to distort jupiter and the cone concurrently
+        :type bool
+
+        :returns: alpha_cone_rad : aperture of the cone in radians measured from the base
+        :rtype: float
+        :returns cone_vertex_jupiter_radii : distance of the umbral cone's sharpest point in jupiter-radii, always behind
+        jupiter if viewed from the sun
+        :rtype: float
+        :returns: beta_cone_rad : aperture of the penumbral cone in radians measured from jupiter
+        :rtype: float
+        :returns: cone_beta_vertex_jupiter_radii : distance of the penumbral cone's sharpest point in jupiter-radii, always
+        before jupiter if viewed from the sun
+        :rtype: float
+        """
+
+        #compute the planetocentric declinations
+        planetocentric_declinations_rad(epoch)
+
+        # define radius of the sun and of jupiter
+        sun_radius_au = 0.00465047
+        jupiter_radius_au = 0.10045 * sun_radius_au
+
+        if (ellipsoid == True):
+            jupiter_radius_multiplicator = 1.071374
+        else:
+            jupiter_radius_multiplicator = 1.0
+
+        jupiter_radius_au = jupiter_radius_au * 1.071374
+
+        # Check if Epoch is given
+        if epoch is not None:
+            # Check types
+            if isinstance(epoch, Epoch):
+                # calcuate the position of jupiter in solar-spherical coordinates
+                l, b, r = Jupiter.geometric_heliocentric_position(epoch)
+
+                # alpha is the umbra defining angle
+                alpha_cone_rad = atan(r / (sun_radius_au - jupiter_radius_au))
+
+                # beta is the penumbra defing angle
+                beta_cone_rad = atan(r / (sun_radius_au + jupiter_radius_au))
+
+                # compute distance of the sharpest pint behind jupiter in jupiter radii
+                cone_vertex_jupiter_radii = tan(alpha_cone_rad)
+                cone_penumbra_basis_jupiter_radii = cone_vertex_jupiter_radii * tan(beta_cone_rad) + 1  # the +1 compensates for the missing jupiter radius
+                cone_beta_vertex_jupiter_radii = (-1 * jupiter_radius_multiplicator * tan(beta_cone_rad))
+
+                return (alpha_cone_rad, cone_vertex_jupiter_radii, beta_cone_rad, cone_beta_vertex_jupiter_radii)
+            else:
+                raise TypeError("Invalid input type")
+                return -1
     def crossing_point(epoch_start, time_span, time_step=1.157401129603386e-05):
 
         '''
