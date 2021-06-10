@@ -3,15 +3,30 @@ import numpy as np
 from math import sqrt, fabs, acos, acosh, isnan, atan, atan2, sin, cos, pi
 from cmath import sqrt as sqrt_complex
 
-# solve cubic equation x^3 + a*x^2 + b*x + c
-# x - array of size 3
-# In case 3 real roots: => x[0], x[1], x[2], return 3
-#         2 real roots: x[0], x[1],          return 2
-#         1 real root : x[0], x[1] ± i*x[2], return 1
+import pymeeus
+
+from pymeeus.JupiterMoons import JupiterMoons
+from pymeeus.Jupiter import Jupiter
+from pymeeus.Earth import Earth
 
 class solverClass :
 
     def solveP3(self, a, b, c):
+        """
+        Solves a cubic euqation algebraically, can also tollerate complex results
+
+        :param a: coefficent
+        :type a: float, compex float
+        :param b: coefficent
+        :type b: float, compex float
+        :param c: coefficent
+        :type c: float, compex float
+
+        :returns: array containing result, as well as number of nonzero solutions
+        :rtype: foat/complex-float numpy array, int
+        """
+
+
         a2 = a ** 2
         q = (a2 - 3 * b) / 9
         r = (a * (2 * a2 - 9 * b) + 27 * c) / 54
@@ -64,8 +79,25 @@ class solverClass :
 
             return x, 1
 
-    # solve quartic equation x^4 + a*x^3 + b*x^2 + c*x + d
     def solve_quartic(self, a, b, c, d):
+
+        """
+        Solves a quartic euqation algebraically, can also tolerate complex results
+
+        :param a: coefficent
+        :type a: float, compex float
+        :param b: coefficent
+        :type b: float, compex float
+        :param c: coefficent
+        :type c: float, compex float
+        :param d: coefficent
+        :type d: float, compex float
+
+        :returns: array containing result, as well as number of nonzero solutions
+        :rtype: foat/complex-float numpy array, int
+        """
+
+
         eps = 1 * 10 ** -5
 
         num_real = 0
@@ -336,6 +368,7 @@ class ShaderClass :
 
         f = 1000.0
         n = r - rs
+
         dis_sat_earth = np.linalg.norm(r)
         dis_sat_sun = np.linalg.norm(n)
         n = n / np.linalg.norm(n)
@@ -819,9 +852,9 @@ class ShadedClass :
                 y = self.radius * np.sin(self.phi_arr[i]) * np.sin(self.theta_arr[e])
                 z = self.radius * np.cos(self.theta_arr[e])
 
-                surfacePos = np.array(x, y, z) + centerpos
+                surfacePos = np.array([x, y, z]) + centerpos
 
-                shadowMesh[e, i] = Shader.shadow_factor_parametric(surfacePos, sunpos, Shader.Solver)
+                shadowMesh[e, i] = Shader.shadow_factor_parametric(surfacePos, sunpos, Shader.polarRadius, Shader.equatorialRadius, Shader.heightAtmosphere,Shader.Solver)
 
         return shadowMesh
 
@@ -843,6 +876,102 @@ class ShadedClass :
                 selfShadowMesh[e, i] = SelfShader.shadow_factor_parametric(surfacePos, sunpos, SelfShader.Solver)
 
         return selfShadowMesh
+
+    def ComputeReflectedLight(self, centerpos, ObserverPos, albedo):
+
+        ReflectivityMask = np.ones([self.n_points, self.n_points]) * albedo
+
+        for i in range(self.n_points):
+
+            for e in range(self.n_points):
+                # position on the surface of the sphere
+
+                x = (self.radius + self.delta) * np.cos(self.phi_arr[i]) * np.sin(self.theta_arr[e])
+                y = (self.radius + self.delta) * np.sin(self.phi_arr[i]) * np.sin(self.theta_arr[e])
+                z = (self.radius + self.delta) * np.cos(self.theta_arr[e])
+
+                surfacePos = np.array([x, y, z]) + centerpos
+
+                a= self.radius + self.delta
+                b = np.linalg.norm(centerpos - ObserverPos)
+                c = np.linalg.norm(surfacePos - ObserverPos)
+
+                gamma = np.arccos((a**2+b**2-c**2)/(2*a*b))
+                delta = np.pi - gamma
+
+                ReflectivityMask[e, i] = ReflectivityMask[e, i] * np.cos(delta)
+
+        return np.clip(ReflectivityMask, 0, 1)
+
+    def FilterInstabilityOut(self, shadow_array):
+
+        max_pos = len(shadow_array)-1
+        filter_width = 6
+
+        derivative = shadow_array[:, :, 0:max_pos-5] - shadow_array[:, :, 1:max_pos-4] - shadow_array[:, :, 2:max_pos-3] \
+                     - shadow_array[:,:,3:max_pos-2] - shadow_array[:, :,4:max_pos-1] - shadow_array[:,:,5:max_pos]
+
+        x_dim = np.shape(shadow_array)[0]
+        y_dim = np.shape(shadow_array)[1]
+
+        filtered = np.zeros([x_dim, y_dim, max_pos-filter_width])
+
+        for t in range(0, max_pos-filter_width):
+
+            for i in range(x_dim):
+                for a in range(y_dim):
+
+                    if (derivative[i, a, t]) != 0:
+                        filtered[i, a, t] = 1
+
+        max_pos = len(derivative)-1
+
+        derivative_2nd_deg = derivative[:, :, 0:max_pos-5] - derivative[:, :, 1:max_pos-4] - derivative[:, :, 2:max_pos-3] \
+                           - derivative[:,:,3:max_pos-2] - derivative[:, :,4:max_pos-1] - derivative[:,:,5:max_pos]
+
+        filtered_2nd_deg = np.zeros([x_dim, y_dim, max_pos-filter_width])
+
+        for t in range(0, max_pos):
+
+            for i in range(x_dim):
+                for a in range(y_dim):
+
+                    if (derivative_2nd_deg[i, a, t]) != 0:
+                        filtered_2nd_deg[i, a, t] = 1
+
+        return filtered_2nd_deg, 2*filter_width
+
+
+class CoordinatesTransformator :
+    def __init__(self, Omega, i, I):
+        self.Omega = Omega
+        self.i = i
+        self.I = I
+    def HelioEcJovEq(self, JupiterPosHeliocentricEcliptic, TargetPosHeliocentricEcliptic):
+
+        #translate system to jovian coordinatas
+        TargetPosHeliocentricEcliptic  = TargetPosHeliocentricEcliptic - JupiterPosHeliocentricEcliptic
+
+        #rotate away from the vernal equinox
+        R_1 = np.array([[np.cos(-self.Omega), -np.sin(-self.Omega), 0],
+                        [np.sin(-self.Omega),  np.cos(-self.Omega), 0],
+                        [                  0,                    0, 1]])
+
+        TargetPosHeliocentricEcliptic = TargetPosHeliocentricEcliptic @ R_1
+
+        R_2 = np.array([[1,               0,                0],
+                        [0, np.cos(-self.i), -np.sin(-self.i)],
+                        [0, np.sin(-self.i), -np.cos(-self.i)]])
+
+        TargetPosHeliocentricEcliptic = TargetPosHeliocentricEcliptic @ R_2
+
+        R_3 = np.array([[1,               0,                0],
+                        [0, np.cos(-self.I), -np.sin(-self.I)],
+                        [0, np.sin(-self.I), -np.cos(-self.I)]])
+
+        TargetPosHeliocentricEcliptic = TargetPosHeliocentricEcliptic @ R_3
+
+        return TargetPosHeliocentricEcliptic
 
 
 def test():
@@ -872,10 +1001,184 @@ def test():
     shadow_factor = earth.shadow_factor_parametric(sunpos, satpos, earth.polarRadius, earth.equatorialRadius, earth.heightAtmosphere, defaultSolver)
     print("light factor : " + str(shadow_factor))
 
-    return 0
+    print("Selftest performed, now switching to jupiter")
+
+    a_jupiter = 71492 #km
+    b_jupiter = 66854 #km
+
+    h_atm_jupiter = 100 #km
+
+    jupiter = ShaderClass(a_jupiter, b_jupiter,h_atm_jupiter, defaultSolver)
+
+    s_jd = 1.157401129603386e-05
+
+    epoch = pymeeus.Epoch.Epoch()
+
+
+    epoch.set(2020, 1, 1, 0)
+
+    ref_epoch_1900= pymeeus.Epoch.Epoch()
+    ref_epoch_1900.set(1900,1,1,0)
+
+    ref_epoch_2000 = pymeeus.Epoch.Epoch()
+    ref_epoch_2000.set(2000, 1, 1, 0)
+
+    T_1900 = (epoch - ref_epoch_1900)/36525
+    T_2000 = (epoch - ref_epoch_2000)/36525
+
+    # get the position of jupiter and of the earth
+    satellite_positions = np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch))
+    jupiter_position = Jupiter.geometric_heliocentric_position(epoch)
+    earth_position = Earth.geometric_heliocentric_position(epoch)
+
+    # convert everything to cartesian
+    x_jupiter = jupiter_position[2] * np.cos(jupiter_position[1].rad()) * np.cos(jupiter_position[0].rad())
+    y_jupiter = jupiter_position[2] * np.cos(jupiter_position[1].rad()) * np.sin(jupiter_position[0].rad())
+    z_jupiter = jupiter_position[2] * np.sin(jupiter_position[1].rad())
+
+    au_to_km = 149597870700.0
+
+    jupiter_pos_rectangular_heliocentric = np.array([x_jupiter, y_jupiter, z_jupiter])
+    jupiter_pos_rectangular_heliocentric = jupiter_pos_rectangular_heliocentric * au_to_km
+
+    x_earth = earth_position[2] * np.cos(earth_position[1].rad()) * np.cos(earth_position[0].rad())
+    y_earth = earth_position[2] * np.cos(earth_position[1].rad()) * np.sin(earth_position[0].rad())
+    z_earth = earth_position[2] * np.sin(earth_position[1].rad())
+
+    earth_pos_rectangular_heliocentric = np.array([x_earth, y_earth, z_jupiter])
+
+    earth_pos_rectangular_heliocentric = earth_pos_rectangular_heliocentric * au_to_km
+
+
+    # convert position of the planets fom au to km
+
+    jupiter_eq_radius_to_km = 7.1492 * 10 ** 4
+
+    I = np.deg2rad(3.120262  + 0.0006*T_1900)
+
+    i = np.deg2rad(1.303267 - 0.0054965*T_2000 + 0.00000466*T_2000**2 + 0.000000002*T_2000**3)
+
+    Omega = np.deg2rad(100.464407 + 1.0209774*T_2000 + 0.00040315*T_2000**2 + 0.000000404*T_2000**3)
+
+    coordTrans = CoordinatesTransformator(Omega, i, I)
+
+    sun_pos_eq_jvc = coordTrans.HelioEcJovEq(jupiter_pos_rectangular_heliocentric, -earth_pos_rectangular_heliocentric)
+    earth_pos_eq_jvc = coordTrans.HelioEcJovEq(jupiter_pos_rectangular_heliocentric, earth_pos_rectangular_heliocentric)
+
+    satellite_positions = satellite_positions * jupiter_eq_radius_to_km
+
+    #define io as shader and shaded
+
+    io_radius = 1821.6 #km
+
+    io_shader = ShaderClass(io_radius, io_radius, 0, defaultSolver)
+
+    n_points = 30
+    delta = 10**-2 #km --10 m
+
+    io_shaded = ShadedClass(io_radius, n_points, 0, delta, jupiter, io_shader)
+
+    s_jd = 1.157401129603386e-05
+
+    epoch = epoch + 4831*s_jd*12
+
+
+    n_sec = 240
+
+    r_io = io_radius
+
+    jupiter_eq_radius_to_km = 7.1492*10**4
+
+    jovian_shadow_array = np.zeros([n_points, n_points, n_sec])
+    reflected_light_array = np.zeros([n_points, n_points, n_sec])
+
+    #compute the jovian shadow array and the quantity of reflected light
+
+    for t in range (0,n_sec) :
+
+        epoch = epoch + s_jd
+
+        satellite_positions = np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch))
+        io_pos = satellite_positions[0, :] * jupiter_eq_radius_to_km
+        jupiter_position = Jupiter.geometric_heliocentric_position(epoch)
+        earth_position = Earth.geometric_heliocentric_position(epoch)
+
+        # convert everything to cartesian
+        x_jupiter = jupiter_position[2] * np.cos(jupiter_position[1].rad()) * np.cos(jupiter_position[0].rad())
+        y_jupiter = jupiter_position[2] * np.cos(jupiter_position[1].rad()) * np.sin(jupiter_position[0].rad())
+        z_jupiter = jupiter_position[2] * np.sin(jupiter_position[1].rad())
+
+        au_to_km = 149597870700.0
+
+        jupiter_pos_rectangular_heliocentric = np.array([x_jupiter, y_jupiter, z_jupiter])
+        jupiter_pos_rectangular_heliocentric = jupiter_pos_rectangular_heliocentric * au_to_km
+
+        x_earth = earth_position[2] * np.cos(earth_position[1].rad()) * np.cos(earth_position[0].rad())
+        y_earth = earth_position[2] * np.cos(earth_position[1].rad()) * np.sin(earth_position[0].rad())
+        z_earth = earth_position[2] * np.sin(earth_position[1].rad())
+
+        earth_pos_rectangular_heliocentric = np.array([x_earth, y_earth, z_jupiter])
+
+        earth_pos_rectangular_heliocentric = earth_pos_rectangular_heliocentric * au_to_km
+
+        sun_pos_eq_jvc = coordTrans.HelioEcJovEq(jupiter_pos_rectangular_heliocentric,
+                                                 -earth_pos_rectangular_heliocentric)
+        earth_pos_eq_jvc = coordTrans.HelioEcJovEq(jupiter_pos_rectangular_heliocentric,
+                                                   earth_pos_rectangular_heliocentric)
+
+        jovian_shadow_array[:, : , t] = io_shaded.ComputeMutualShadow(sun_pos_eq_jvc, io_pos, jupiter)
+
+        reflected_light_array[:, : , t] = io_shaded.ComputeReflectedLight(io_pos, earth_pos_eq_jvc, 1.0)
+
+    filter_depth = 12
 
 
 
+    epoch.set(2020, 1, 1, 0)
+
+    epoch = epoch - filter_depth*s_jd
+
+    sun_illumination_array_unfiltered = np.zeros([n_points, n_points, n_sec+filter_depth])
+
+    for t in range(0, n_sec+filter_depth):
+        epoch = epoch + s_jd
+
+        satellite_positions = np.array(JupiterMoons.rectangular_positions_jovian_equatorial(epoch))
+        io_pos = satellite_positions[0, :] * jupiter_eq_radius_to_km
+        jupiter_position = Jupiter.geometric_heliocentric_position(epoch)
+        earth_position = Earth.geometric_heliocentric_position(epoch)
+
+        # convert everything to cartesian
+        x_jupiter = jupiter_position[2] * np.cos(jupiter_position[1].rad()) * np.cos(jupiter_position[0].rad())
+        y_jupiter = jupiter_position[2] * np.cos(jupiter_position[1].rad()) * np.sin(jupiter_position[0].rad())
+        z_jupiter = jupiter_position[2] * np.sin(jupiter_position[1].rad())
+
+        au_to_km = 149597870700.0
+
+        jupiter_pos_rectangular_heliocentric = np.array([x_jupiter, y_jupiter, z_jupiter])
+        jupiter_pos_rectangular_heliocentric = jupiter_pos_rectangular_heliocentric * au_to_km
+
+        x_earth = earth_position[2] * np.cos(earth_position[1].rad()) * np.cos(earth_position[0].rad())
+        y_earth = earth_position[2] * np.cos(earth_position[1].rad()) * np.sin(earth_position[0].rad())
+        z_earth = earth_position[2] * np.sin(earth_position[1].rad())
+
+        earth_pos_rectangular_heliocentric = np.array([x_earth, y_earth, z_jupiter])
+
+        earth_pos_rectangular_heliocentric = earth_pos_rectangular_heliocentric * au_to_km
+
+        sun_pos_eq_jvc = coordTrans.HelioEcJovEq(jupiter_pos_rectangular_heliocentric,
+                                                 -earth_pos_rectangular_heliocentric)
+        earth_pos_eq_jvc = coordTrans.HelioEcJovEq(jupiter_pos_rectangular_heliocentric,
+                                                   earth_pos_rectangular_heliocentric)
+
+        sun_illumination_array_unfiltered[:, :, t] = io_shaded.ComputeSelfShadow(sun_pos_eq_jvc, io_pos, io_shader)
+
+    sun_illumination_array_filtered = io_shaded.FilterInstabilityOut(sun_illumination_array_unfiltered)
+    sun_illumination_array_filtered = sun_illumination_array_filtered[:, :, filter_depth:(n_sec+filter_depth)]
+
+    illumination_array = np.clip((jovian_shadow_array + sun_illumination_array_filtered), 0, 1)
+
+    illumination_array = illumination_array * reflected_light_array
 
 
 test()
