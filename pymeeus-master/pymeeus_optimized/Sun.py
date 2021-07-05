@@ -16,8 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
+from functools import lru_cache
 from math import sin, cos, tan, atan, atan2, asin
 
 from pymeeus_optimized.Angle import Angle
@@ -182,6 +181,7 @@ class Sun(object):
         return (alpha, delta, r)
 
     @staticmethod
+    @lru_cache(maxsize=None)
     def geometric_geocentric_position(epoch, tofk5=True):
         """This method computes the geometric geocentric position of the Sun
         for a given epoch, using the VSOP87 theory.
