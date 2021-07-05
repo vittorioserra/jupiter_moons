@@ -2,11 +2,11 @@ import functools
 from enum import unique, IntEnum
 from typing import List
 
-from pymeeus.Epoch import Epoch
-from pymeeus.Jupiter import Jupiter
-from pymeeus.JupiterMoons import JupiterMoons
-from pymeeus.Earth import Earth
-from pymeeus.Coordinates import mean_obliquity
+from pymeeus_optimized.Epoch import Epoch
+from pymeeus_optimized.Jupiter import Jupiter
+from pymeeus_optimized.JupiterMoons import JupiterMoons
+from pymeeus_optimized.Earth import Earth
+from pymeeus_optimized.Coordinates import mean_obliquity
 import numpy as np
 from numpy import sin, cos, sqrt, deg2rad, tan, arctan2, arcsin
 
