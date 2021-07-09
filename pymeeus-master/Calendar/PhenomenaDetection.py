@@ -10,12 +10,12 @@ from pymeeus_optimized.Coordinates import mean_obliquity
 import numpy as np
 from numpy import sin, cos, sqrt, deg2rad, tan, arctan2, arcsin
 
-
 from math import atan, tan, sqrt
 
 # Radius of Jupiter moons in Jupiter's radii
 # moons_radii = [3643.2 / (2 * 69911), 3121.6 / (2 * 69911), 5262.4 / (2 * 69911), 4820.6 / (2 * 69911)]
-moons_radii = [3643.2 / (2 * 71492), 3121.6 / (2 * 71492), 5262.4 / (2 * 71492), 4820.6 / (2 * 71492)]
+moons_radii = [3643.2 / (2 * 71492), 3121.6 / (2 * 71492),
+               5262.4 / (2 * 71492), 4820.6 / (2 * 71492)]
 
 
 @functools.total_ordering
@@ -75,7 +75,8 @@ class Phenomenon(Result):
     """Class that delivers calculation data for phenomena
     """
 
-    def __init__(self, phenomenon_type: str, sat: int, distance: float, z: float, epoch: Epoch,
+    def __init__(self, phenomenon_type: str, sat: int, distance: float,
+                 z: float, epoch: Epoch,
                  shadow_radius_umbra: float = 0,
                  shadow_radius_penumbra: float = 0):
         """Constructor for Phenomenon class.
@@ -165,7 +166,8 @@ class Phenomenon(Result):
         """
 
         # Calculate updated phenomenon
-        updated_phenomenon = Detection.check_single_phenomena(epoch, self.sat, self.phenomenon_type)
+        updated_phenomenon = Detection.check_single_phenomena(epoch, self.sat,
+                                                              self.phenomenon_type)
 
         # Copy all class variables from updated phenomenon
         self.phenomenon_type = updated_phenomenon.phenomenon_type
@@ -236,7 +238,8 @@ class Detection:
     phenomena_types_str = ["OC", "EC", "PA", "OM"]
 
     @staticmethod
-    def check_single_phenomena(epoch: Epoch, i_sat: int, phenomenon_type: str) -> Phenomenon:
+    def check_single_phenomena(epoch: Epoch, i_sat: int,
+                               phenomenon_type: str) -> Phenomenon:
         """Calculates a Phenomenon object for a given satellite and phenomenon
         type to a given Epoch
 
@@ -259,27 +262,38 @@ class Detection:
             raise TypeError("Invalid input type")
 
         # Calc perspective coordinates of the satellites depending on phenomenon type
-        Coords = JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=phenomenon_type in ["EC", "OM"])
+        Coords = JupiterMoons.rectangular_positions_jovian_equatorial(epoch,
+                                                                      solar=phenomenon_type in [
+                                                                          "EC",
+                                                                          "OM"])
 
         # Earth based phenomena
         if phenomenon_type in ["PA", "OC"]:
             # Calc perspective distance to Jupiter for given satellite
-            distance = Detection.perspective_distance(Coords[i_sat][0], Coords[i_sat][1])
+            distance = Detection.perspective_distance(Coords[i_sat][0],
+                                                      Coords[i_sat][1])
 
             # Return Phenomena instance
-            return Phenomenon(Detection.phenomena_types_str[Detection.phenomena_types_str.index(phenomenon_type)],
+            return Phenomenon(Detection.phenomena_types_str[
+                                  Detection.phenomena_types_str.index(
+                                      phenomenon_type)],
                               i_sat, distance, Coords[i_sat][2], epoch)
 
         # Solar phenomena
         else:
             # Calc perspective distance to Jupiter for given satellite
-            distance = Detection.perspective_distance(Coords[i_sat][0], Coords[i_sat][1])
+            distance = Detection.perspective_distance(Coords[i_sat][0],
+                                                      Coords[i_sat][1])
             # Calc shadow cone parameter
-            r_umbra, r_penumbra = Detection.cone_radius(epoch, Coords[i_sat][2])
+            r_umbra, r_penumbra = Detection.cone_radius(epoch,
+                                                        Coords[i_sat][2])
 
             # Return Phenomena instance
-            return Phenomenon(Detection.phenomena_types_str[Detection.phenomena_types_str.index(phenomenon_type)],
-                              i_sat, distance, Coords[i_sat][2], epoch, r_umbra,
+            return Phenomenon(Detection.phenomena_types_str[
+                                  Detection.phenomena_types_str.index(
+                                      phenomenon_type)],
+                              i_sat, distance, Coords[i_sat][2], epoch,
+                              r_umbra,
                               r_penumbra)
 
     @staticmethod
@@ -313,32 +327,41 @@ class Detection:
                                                  [None, None, None, None]]
 
         # Calculate coordinates as seen from the Earth
-        Coords_Earth = JupiterMoons.rectangular_positions_jovian_equatorial(epoch)
+        Coords_Earth = JupiterMoons.rectangular_positions_jovian_equatorial(
+            epoch)
         # Calculate coordinates as seen from the Sun
-        Coords_Sun = JupiterMoons.rectangular_positions_jovian_equatorial(epoch, solar=True)
+        Coords_Sun = JupiterMoons.rectangular_positions_jovian_equatorial(
+            epoch, solar=True)
 
         # Iterate through satellites
         for i_sat in range(0, 4):
             # Iterate through phenomena types
             for phenomenon_type in Detection.PhenomenaTypes:
-                if phenomenon_type in [Detection.PhenomenaTypes.PA, Detection.PhenomenaTypes.OC]:
+                if phenomenon_type in [Detection.PhenomenaTypes.PA,
+                                       Detection.PhenomenaTypes.OC]:
                     # Calc perspective distance to Jupiter
-                    distance = Detection.perspective_distance(Coords_Earth[i_sat][0], Coords_Earth[i_sat][1])
+                    distance = Detection.perspective_distance(
+                        Coords_Earth[i_sat][0], Coords_Earth[i_sat][1])
 
                     # Fill result matrix with Phenomena instance
-                    result_matrix[i_sat][phenomenon_type] = Phenomenon(Detection.phenomena_types_str[phenomenon_type],
-                                                                       i_sat, distance, Coords_Earth[i_sat][2], epoch)
+                    result_matrix[i_sat][phenomenon_type] = Phenomenon(
+                        Detection.phenomena_types_str[phenomenon_type],
+                        i_sat, distance, Coords_Earth[i_sat][2], epoch)
                 else:
                     # Calc perspective distance to Jupiter
-                    distance = Detection.perspective_distance(Coords_Sun[i_sat][0], Coords_Sun[i_sat][1])
+                    distance = Detection.perspective_distance(
+                        Coords_Sun[i_sat][0], Coords_Sun[i_sat][1])
                     # Calc shadow cone parameter
-                    r_umbra, r_penumbra = Detection.cone_radius(epoch, Coords_Sun[i_sat][2])
+                    r_umbra, r_penumbra = Detection.cone_radius(epoch,
+                                                                Coords_Sun[
+                                                                    i_sat][2])
 
                     # Fill result matrix with Phenomena instance
-                    result_matrix[i_sat][phenomenon_type] = Phenomenon(Detection.phenomena_types_str[phenomenon_type],
-                                                                       i_sat, distance, Coords_Sun[i_sat][2], epoch,
-                                                                       r_umbra,
-                                                                       r_penumbra)
+                    result_matrix[i_sat][phenomenon_type] = Phenomenon(
+                        Detection.phenomena_types_str[phenomenon_type],
+                        i_sat, distance, Coords_Sun[i_sat][2], epoch,
+                        r_umbra,
+                        r_penumbra)
 
         return result_matrix
 
@@ -378,7 +401,8 @@ class Detection:
             radii
         """
 
-        alpha_rad, cone_alpha_vertex, beta_rad, cone_beta_vertex = Detection.round_base_cone_param(epoch)
+        alpha_rad, cone_alpha_vertex, beta_rad, cone_beta_vertex = Detection.round_base_cone_param(
+            epoch)
 
         r_umbra = (abs(cone_alpha_vertex) - z) / abs(cone_alpha_vertex)
         r_penumbra = (abs(cone_beta_vertex) + z) / abs(cone_beta_vertex)
@@ -427,23 +451,28 @@ class Detection:
 
         epsilon_0 = (mean_obliquity(epoch)).rad()
 
-        alpha_s = np.arctan2((np.cos(epsilon_0) * np.sin(l) - np.sin(epsilon_0) * np.tan(b)), np.cos(l))
-        delta_s = np.arcsin(cos(epsilon_0) * sin(b) + sin(epsilon_0) * cos(b) * sin(l))
+        alpha_s = np.arctan2(
+            (np.cos(epsilon_0) * np.sin(l) - np.sin(epsilon_0) * np.tan(b)),
+            np.cos(l))
+        delta_s = np.arcsin(
+            cos(epsilon_0) * sin(b) + sin(epsilon_0) * cos(b) * sin(l))
 
-        D_s = -sin(delta_0) * sin(delta_s) - cos(delta_0) * cos(delta_s) * cos(alpha_0 - alpha_s)
+        D_s = -sin(delta_0) * sin(delta_s) - cos(delta_0) * cos(delta_s) * cos(
+            alpha_0 - alpha_s)
 
         u = y * cos(epsilon_0) - z * sin(epsilon_0)
         v = y * sin(epsilon_0) + z * cos(epsilon_0)
 
         alpha = arctan2(u, x)
         delta = arctan2(v, sqrt(x ** 2 + u ** 2))
-        chsi = arctan2(sin(delta_0) * cos(delta) * cos(alpha_0 - alpha) - sin(delta) * cos(delta_0),
+        chsi = arctan2(sin(delta_0) * cos(delta) * cos(alpha_0 - alpha) - sin(
+            delta) * cos(delta_0),
                        cos(delta) * sin(alpha_0 - alpha))
 
-        D_e = -sin(delta_0) * sin(delta) - cos(delta_0) * cos(delta) * cos(alpha_0 - alpha)
+        D_e = -sin(delta_0) * sin(delta) - cos(delta_0) * cos(delta) * cos(
+            alpha_0 - alpha)
 
         return D_s, D_e
-
 
     @staticmethod
     def ellipse_base_cone_param(epoch: Epoch, ellipsoid: bool = True):
@@ -472,7 +501,7 @@ class Detection:
         :raises: TypeError, if input parameter has invalid type
         """
 
-        #compute the angles
+        # compute the angles
         D_s, D_e = planetocentric_declinations_rad(epoch)
 
         # Define radii of sun and Jupiter in AU
@@ -494,24 +523,35 @@ class Detection:
                 l, b, r = Jupiter.geometric_heliocentric_position(epoch)
 
                 # alpha is the umbra defining angle
-                alpha_cone_rad_equatorial = atan(r / (sun_radius_au - jupiter_radius_au))
-                alpha_cone_rad_polar = atan(r / (sun_radius_au - jupiter_radius_au*np.cos(D_s)))
+                alpha_cone_rad_equatorial = atan(
+                    r / (sun_radius_au - jupiter_radius_au))
+                alpha_cone_rad_polar = atan(
+                    r / (sun_radius_au - jupiter_radius_au * np.cos(D_s)))
 
                 # beta is the penumbra defying angle
-                beta_cone_rad_equatorial = atan(r / (sun_radius_au + jupiter_radius_au))
-                beta_cone_rad_polar = atan(r / (sun_radius_au + jupiter_radius_au*np.cos(D_s)))
+                beta_cone_rad_equatorial = atan(
+                    r / (sun_radius_au + jupiter_radius_au))
+                beta_cone_rad_polar = atan(
+                    r / (sun_radius_au + jupiter_radius_au * np.cos(D_s)))
 
                 # Compute distance of the sharpest pint behind jupiter in jupiter radii
-                cone_vertex_jupiter_radii_equatorial = tan(alpha_cone_rad_equatorial)
+                cone_vertex_jupiter_radii_equatorial = tan(
+                    alpha_cone_rad_equatorial)
                 cone_vertex_jupiter_radii_polar = tan(alpha_cone_rad_polar)
 
-                cone_beta_vertex_jupiter_radii_equatorial = (-1 * jupiter_radius_multiplier * tan(beta_cone_rad_equatorial))
-                cone_beta_vertex_jupiter_radii_polar = (-1 * jupiter_radius_multiplier * tan(beta_cone_rad_polar))
+                cone_beta_vertex_jupiter_radii_equatorial = (
+                            -1 * jupiter_radius_multiplier * tan(
+                        beta_cone_rad_equatorial))
+                cone_beta_vertex_jupiter_radii_polar = (
+                            -1 * jupiter_radius_multiplier * tan(
+                        beta_cone_rad_polar))
 
-                return [alpha_cone_rad_equatorial,alpha_cone_rad_polar], \
-                       [cone_vertex_jupiter_radii_equatorial, cone_vertex_jupiter_radii_polar], \
-                       [beta_cone_rad_equatorial, beta_cone_rad_polar],\
-                       [cone_beta_vertex_jupiter_radii_equatorial, cone_beta_vertex_jupiter_radii_polar]
+                return [alpha_cone_rad_equatorial, alpha_cone_rad_polar], \
+                       [cone_vertex_jupiter_radii_equatorial,
+                        cone_vertex_jupiter_radii_polar], \
+                       [beta_cone_rad_equatorial, beta_cone_rad_polar], \
+                       [cone_beta_vertex_jupiter_radii_equatorial,
+                        cone_beta_vertex_jupiter_radii_polar]
 
             else:
                 raise TypeError("Invalid input type")
@@ -531,14 +571,19 @@ class Detection:
         """
         # compute the angles
 
-        alpha_cone_rad,cone_alpha_vertex,beta_cone_rad , cone_beta_vertex = Detection.ellipse_base_cone_param(epoch)
+        alpha_cone_rad, cone_alpha_vertex, beta_cone_rad, cone_beta_vertex = Detection.ellipse_base_cone_param(
+            epoch)
 
-        r_umbra_equatorial = (abs(cone_alpha_vertex[0]) - z) / abs(cone_alpha_vertex[0])
-        r_umbra_polar = (abs(cone_alpha_vertex[1]) - z) / abs(cone_alpha_vertex[1])
-        r_penumbra_equatorial = (abs(cone_beta_vertex[0]) + z) / abs(cone_beta_vertex[0])
-        r_penumbra_polar = (abs(cone_beta_vertex[1]) + z) / abs(cone_beta_vertex[1])
+        r_umbra_equatorial = (abs(cone_alpha_vertex[0]) - z) / abs(
+            cone_alpha_vertex[0])
+        r_umbra_polar = (abs(cone_alpha_vertex[1]) - z) / abs(
+            cone_alpha_vertex[1])
+        r_penumbra_equatorial = (abs(cone_beta_vertex[0]) + z) / abs(
+            cone_beta_vertex[0])
+        r_penumbra_polar = (abs(cone_beta_vertex[1]) + z) / abs(
+            cone_beta_vertex[1])
 
-        r_umbra =[r_umbra_equatorial, r_umbra_polar]
+        r_umbra = [r_umbra_equatorial, r_umbra_polar]
         r_penumbra = [r_penumbra_polar, r_penumbra_equatorial]
 
         return r_umbra, r_penumbra
@@ -595,12 +640,13 @@ class Detection:
 
                 # Compute distance of the sharpest pint behind jupiter in jupiter radii
                 cone_vertex_jupiter_radii = tan(alpha_cone_rad)
-                cone_beta_vertex_jupiter_radii = (-1 * jupiter_radius_multiplier * tan(beta_cone_rad))
+                cone_beta_vertex_jupiter_radii = (
+                            -1 * jupiter_radius_multiplier * tan(
+                        beta_cone_rad))
 
                 return alpha_cone_rad, cone_vertex_jupiter_radii, beta_cone_rad, cone_beta_vertex_jupiter_radii
             else:
                 raise TypeError("Invalid input type")
-
 
 
 if __name__ == "__main__":
