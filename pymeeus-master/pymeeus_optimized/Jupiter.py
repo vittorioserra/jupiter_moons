@@ -19,7 +19,7 @@
 from functools import lru_cache
 from math import sin, cos, tan, acos, atan2, sqrt, radians, log10
 
-import np as np
+import numpy as np
 
 from pymeeus_optimized.Angle import Angle
 from pymeeus_optimized.Epoch import Epoch, JDE2000
